@@ -626,7 +626,7 @@ nav a.ext:hover .xo{transform:translate(2px,-2px)}
 </div>
 
 <script>
-const API='https://script.google.com/macros/s/AKfycbz6XlWb-3JXrWt2rusULMriXywWWTG0hAblhoqGwmW3g1XDxPjDJkYGeXTADqwpA-bJbw/exec';
+const API='https://script.google.com/macros/s/AKfycbzBEuReTjBXgqqp1_7hugVNUvKKefiXJ2GkmY9GpMkMAXEclmHrb9Y0qa9077ptO43NcA/exec';
 const BARANG_LIMIT=0.35;           // Segera Request: stok akhir <= 35% stok awal
 const MENIPIS_LIMIT=0.40;          // Stok Menipis: stok akhir <= 40% stok awal
 const DW='H-008';                  // DropWire 1 Core: satuan meter
@@ -930,8 +930,17 @@ function woNorm(rows){
    else if(/CANCEL/.test(st))s='CANCEL';else if(/PEND/.test(st))s='PENDING';else if(/DONE|COMPLETE/.test(st))s='DONE';
    if(!s&&/resched|reshedule|jadwal\s*ulang/i.test(rm+' '+(r.ket||'')+' '+st))s='PENDING';
    if(s==='DONE'||s==='CANCEL'){if(prev){delete WOH[r.wo];hchg=true}}
-   else if(s==='PENDING'){ resched=!!d&&+day0(d)===tomT; }
-   else{ s=(d&&+day0(d)===todayT)?'LAIN':'BELUM'; }
+   else if(s==='PENDING'){
+     sched=pd(rm+' '+(r.ket||'')+' '+st);
+     const rs=!!(prev&&prev.rs)||!!(prev&&prev.tgl&&prev.tgl!==tg);
+     if(!prev||prev.tgl!==tg||!!prev.rs!==rs){WOH[r.wo]={tgl:tg,rs};hchg=true}
+     resched=rs;
+   }else{
+     // Status kosong: jika sebelumnya pending dan tanggalnya berubah -> tetap Pending (riwayat lama dibiarkan)
+     if(prev&&prev.rs){s='PENDING';resched=true}
+     else if(prev&&prev.tgl&&prev.tgl!==tg&&d){s='PENDING';resched=true;WOH[r.wo]={tgl:prev.tgl,rs:true};hchg=true}
+     else s=(d&&+day0(d)===todayT)?'LAIN':'BELUM';
+   }
    if(resched&&d)sched=d;
    let rem=r.rem;
    if(resched&&d){
@@ -965,7 +974,7 @@ R.wo=function(rows){
  const inRange=r=>(!dF||r.d>=dF)&&(!dT||r.d<=new Date(dT.getFullYear(),dT.getMonth(),dT.getDate(),23,59,59));
  const base=useDate?all.filter(inRange):f;
  const n=base.length,c=t=>base.filter(r=>r.s===t).length,pc=t=>n?c(t)/n*100:0;
- const cR=all.filter(r=>r.resched).length;
+ const cR=base.filter(r=>r.resched).length;
  const bc=t=>base.filter(r=>r.s===t).length;
  const HW=['DONE','CANCEL','RESCHED'];
  const listBase=useDate?base:(HW.includes(S.wf)?all:f);
@@ -981,10 +990,10 @@ R.wo=function(rows){
    const y=Math.floor(k/100),mo=k%100,days=new Date(y,mo+1,0).getDate();
    const tot=Array(days).fill(0),dn=Array(days).fill(0);
    f.forEach(r=>{const i=r.d.getDate()-1;tot[i]++;if(r.s==='DONE')dn[i]++});
-   lineP=`<div class="panel"><div class="sec-t"><h3>${T('wo_title')}</h3><small>${mName(mo)} ${y}</small></div>${line(tot,dn)}</div>`;
+   lineP=`<div class="panel"><div class="sec-t"><h3>${T('wo_title')}</h3><small>${mName(mo)} ${y}${(Array.isArray(rows)?rows:[]).filter(r=>!pd(r.tgl)).length?' · ⚠ '+(Array.isArray(rows)?rows:[]).filter(r=>!pd(r.tgl)).length+' baris tanggal tidak terbaca':''}</small></div>${line(tot,dn)}</div>`;
  }
  const pend=all.filter(r=>r.s==='PENDING'&&r.sched).map(r=>({...r,diff:Math.round((day0(r.sched)-today)/864e5)})).sort((a,b)=>a.diff-b.diff);
- const panelPend=pend.filter(r=>r.diff===1);
+ const panelPend=pend.filter(r=>r.diff!==0);
  const rem=pend.filter(r=>r.diff>=0&&r.diff<=3).map(r=>{const urgent=r.diff===0||(r.diff===1&&now.getHours()>=16);return{...r,urgent}});
  const remH=rem.length?`<div class="grid" style="margin-bottom:16px">${rem.map(r=>`<div class="alert ${r.urgent?'red blink':'amber blink-a'}"><div style="flex:1"><b>${r.urgent?(r.diff===0?T('rem_now'):T('rem_tmr')):T('rem_h')+r.diff}</b>${E(r.wo)} · ${E(r.cust)} · ${E(r.tek)}<br><span style="opacity:.85">${T('rem_sched')} ${fmtLong(r.sched)}</span></div></div>`).join('')}</div>`:'';
  const allT=all.length,allDone=all.filter(r=>r.s==='DONE').length;
@@ -1188,7 +1197,22 @@ function isoJS(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-
 // Daftar pending besok: WO yang sudah berubah tanggal dan teknisinya sudah diisi tetap tampil (tandai SUDAH DI JADWALKAN)
 // Pending untuk tanggal tertentu. WO yang sudah berubah tanggal dan teknisinya terisi tetap ada (ditandai done)
 // agar total install + pending tidak turun.
-function snapDay(off,tm,cur,W){ return cur.map(r=>({...r,done:false})) }
+function snapDay(off,tm,cur,W){
+ const key='apmPend'+off,iso=isoJS(tm);
+ let snap=null;try{snap=JSON.parse(localStorage.getItem(key)||'null')}catch(e){snap=null}
+ if(!snap||snap.date!==iso)snap={date:iso,items:{}};
+ cur.forEach(r=>{snap.items[r.wo]={sched:isoJS(r.sched),tek:String(r.tek||'').trim()}});
+ try{localStorage.setItem(key,JSON.stringify(snap))}catch(e){}
+ const byWo=new Map(W.map(r=>[r.wo,r]));
+ const list=cur.map(r=>({...r,done:false}));
+ Object.entries(snap.items).forEach(([wo,it])=>{
+   if(cur.some(r=>r.wo===wo))return;
+   const c=byWo.get(wo);if(!c)return;
+   const changed=c.sched?isoJS(c.sched)!==it.sched:c.s==='LAIN';
+   if(changed&&String(c.tek||'').trim())list.push({...c,done:true});
+ });
+ return list;
+}
 function pendPanel(bi,label,rows){
  const list=rows||bi.pend;
  const tr=list.map(r=>[r.wo,r.cust,r.dist,r.tek,r.done?pill(T('terjadwal'),'ok'):pill(T('st_pending'),'wr'),
