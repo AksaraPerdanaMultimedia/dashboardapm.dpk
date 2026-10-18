@@ -590,6 +590,17 @@ nav a.ext:hover .xo{transform:translate(2px,-2px)}
 @keyframes quakeRing{0%{transform:scale(1);opacity:.95}100%{transform:scale(3.6);opacity:0}}
 @media(max-width:980px){.quake{animation:none!important}}
 .kecsel{margin-left:auto;margin-right:12px;font-family:'Righteous',cursive;font-size:12px;padding:6px 10px;border:2px solid var(--ink);border-radius:10px;background:var(--cream2);color:var(--ink);max-width:200px}
+/* ===== Tombol IMS ===== */
+.ims{position:relative;display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 18px;padding:20px 26px;border-radius:20px;border:3px solid var(--ink);text-decoration:none;color:#fff8e8;background:linear-gradient(110deg,#0f766e,#1d4ed8,#7c3aed,#db2777,#0f766e);background-size:300% 300%;box-shadow:6px 6px 0 var(--ink),0 0 28px rgba(59,130,246,.45);overflow:hidden;animation:imsFlow 7s ease infinite;transition:transform .25s ease,box-shadow .25s ease}
+.ims:before{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.4) 50%,transparent 62%);transform:translateX(-100%);animation:imsSheen 3.4s ease-in-out infinite;pointer-events:none}
+.ims:hover{transform:translateY(-3px);box-shadow:9px 9px 0 var(--ink),0 0 40px rgba(59,130,246,.65)}
+.ims .ims-t{font-family:'Shrikhand',cursive;font-size:52px;line-height:1;text-shadow:3px 3px 0 var(--ink);letter-spacing:.02em}
+.ims .ims-s{font-family:'Righteous',cursive;font-size:14px;letter-spacing:.1em;margin-top:8px;text-transform:uppercase;opacity:.95}
+.ims .ims-go{flex:0 0 auto;width:58px;height:58px;border-radius:50%;background:#fff8e8;color:var(--ink);display:grid;place-items:center;border:3px solid var(--ink);font-size:26px;font-weight:700;box-shadow:3px 3px 0 var(--ink);animation:imsBob 1.8s ease-in-out infinite}
+@keyframes imsFlow{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes imsSheen{0%{transform:translateX(-100%)}60%,100%{transform:translateX(100%)}}
+@keyframes imsBob{0%,100%{transform:translate(0,0)}50%{transform:translate(4px,-4px)}}
+@media(max-width:980px){.ims,.ims *,.ims:before{animation:none!important}.ims .ims-t{font-size:38px}.ims{padding:16px 18px}.ims .ims-go{width:46px;height:46px;font-size:20px}}
 </style>
 </head>
 <body>
@@ -901,12 +912,12 @@ function draw(){chrome();$('out').classList.toggle('enter',Date.now()<(S.enterUn
 /* ---------- WO APM ---------- */
 let WOH=null;   // riwayat pending per WO (tersimpan di browser): {wo:{tgl,rs}}
 function woNorm(rows){
- // Duplikat (nomor WO sama ATAU nama pelanggan sama) dihitung 1: baris paling bawah (update terakhir) yang dipakai
- const seenW=new Set(),seenC=new Set(),keep=[];
+ // Duplikat = nomor WO yang sama, dihitung 1: baris paling bawah (update terakhir) yang dipakai
+ const seenW=new Set(),keep=[];
  for(let i=rows.length-1;i>=0;i--){const r=rows[i];
-   const wk=String(r.wo||'').trim().toUpperCase(),ck=String(r.cust||'').trim().toLowerCase();
-   if(seenW.has(wk)||(ck&&seenC.has(ck)))continue;
-   seenW.add(wk);if(ck)seenC.add(ck);keep.push(r)}
+   const wk=String(r.wo||'').trim().toUpperCase();
+   if(seenW.has(wk))continue;
+   seenW.add(wk);keep.push(r)}
  keep.reverse();
  if(WOH===null){try{WOH=JSON.parse(localStorage.getItem('apmWoHist')||'{}')}catch(e){WOH={}}}
  let hchg=false;
@@ -919,17 +930,8 @@ function woNorm(rows){
    else if(/CANCEL/.test(st))s='CANCEL';else if(/PEND/.test(st))s='PENDING';else if(/DONE|COMPLETE/.test(st))s='DONE';
    if(!s&&/resched|reshedule|jadwal\s*ulang/i.test(rm+' '+(r.ket||'')+' '+st))s='PENDING';
    if(s==='DONE'||s==='CANCEL'){if(prev){delete WOH[r.wo];hchg=true}}
-   else if(s==='PENDING'){
-     sched=pd(rm+' '+(r.ket||'')+' '+st);
-     const rs=!!(prev&&prev.rs)||!!(prev&&prev.tgl&&prev.tgl!==tg);
-     if(!prev||prev.tgl!==tg||!!prev.rs!==rs){WOH[r.wo]={tgl:tg,rs};hchg=true}
-     resched=rs;
-   }else{
-     // Status kosong: jika sebelumnya pending dan tanggalnya berubah -> tetap Pending (riwayat lama dibiarkan)
-     if(prev&&prev.rs){s='PENDING';resched=true}
-     else if(prev&&prev.tgl&&prev.tgl!==tg&&d){s='PENDING';resched=true;WOH[r.wo]={tgl:prev.tgl,rs:true};hchg=true}
-     else s=(d&&+day0(d)===todayT)?'LAIN':'BELUM';
-   }
+   else if(s==='PENDING'){ resched=!!d&&+day0(d)===tomT; }
+   else{ s=(d&&+day0(d)===todayT)?'LAIN':'BELUM'; }
    if(resched&&d)sched=d;
    let rem=r.rem;
    if(resched&&d){
@@ -963,7 +965,7 @@ R.wo=function(rows){
  const inRange=r=>(!dF||r.d>=dF)&&(!dT||r.d<=new Date(dT.getFullYear(),dT.getMonth(),dT.getDate(),23,59,59));
  const base=useDate?all.filter(inRange):f;
  const n=base.length,c=t=>base.filter(r=>r.s===t).length,pc=t=>n?c(t)/n*100:0;
- const cR=base.filter(r=>r.resched).length;
+ const cR=all.filter(r=>r.resched).length;
  const bc=t=>base.filter(r=>r.s===t).length;
  const HW=['DONE','CANCEL','RESCHED'];
  const listBase=useDate?base:(HW.includes(S.wf)?all:f);
@@ -982,7 +984,7 @@ R.wo=function(rows){
    lineP=`<div class="panel"><div class="sec-t"><h3>${T('wo_title')}</h3><small>${mName(mo)} ${y}</small></div>${line(tot,dn)}</div>`;
  }
  const pend=all.filter(r=>r.s==='PENDING'&&r.sched).map(r=>({...r,diff:Math.round((day0(r.sched)-today)/864e5)})).sort((a,b)=>a.diff-b.diff);
- const panelPend=pend.filter(r=>r.diff!==0);
+ const panelPend=pend.filter(r=>r.diff===1);
  const rem=pend.filter(r=>r.diff>=0&&r.diff<=3).map(r=>{const urgent=r.diff===0||(r.diff===1&&now.getHours()>=16);return{...r,urgent}});
  const remH=rem.length?`<div class="grid" style="margin-bottom:16px">${rem.map(r=>`<div class="alert ${r.urgent?'red blink':'amber blink-a'}"><div style="flex:1"><b>${r.urgent?(r.diff===0?T('rem_now'):T('rem_tmr')):T('rem_h')+r.diff}</b>${E(r.wo)} · ${E(r.cust)} · ${E(r.tek)}<br><span style="opacity:.85">${T('rem_sched')} ${fmtLong(r.sched)}</span></div></div>`).join('')}</div>`:'';
  const allT=all.length,allDone=all.filter(r=>r.s==='DONE').length;
@@ -1054,7 +1056,8 @@ R.invoice=function(d){
  if(d.err){$('out').innerHTML=`<div class="err">${E(d.err)}</div>`;return}
  setCtl('');
  const list=S.invF==='belum'?d.belum:S.invF==='sudah'?d.sudah:null;
- const cards=`<div class="grid kpis">${card(T('inv_card_sudah'),d.sudah.length,T('inv_sub_sudah'),'var(--ok)',"S.invF='sudah';draw()")}${card(T('inv_card_belum'),d.belum.length,T('inv_sub_belum'),'var(--er)',"S.invF='belum';draw()")}</div>`;
+ const ims=`<a class="ims" href="https://invoices.fiberstar.co.id/#/work-order" target="_blank" rel="noopener"><div><div class="ims-t">IMS</div><div class="ims-s">Invoice Management System</div></div><span class="ims-go">&#8599;</span></a>`;
+ const cards=ims+`<div class="grid kpis">${card(T('inv_card_sudah'),d.sudah.length,T('inv_sub_sudah'),'var(--ok)',"S.invF='sudah';draw()")}${card(T('inv_card_belum'),d.belum.length,T('inv_sub_belum'),'var(--er)',"S.invF='belum';draw()")}</div>`;
  const det=list?`<div class="panel"><div class="sec-t"><h3>${T(S.invF==='sudah'?'inv_card_sudah':'inv_card_belum')}</h3><small>${list.length} WO</small></div>${tbl(T('inv_h'),list.map(x=>[x[0],x[1],x[3]||'-',x[2]||T('inv_belum_txt')]))}</div>`:'';
  $('out').innerHTML=cards+det;
 };
@@ -1185,22 +1188,7 @@ function isoJS(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-
 // Daftar pending besok: WO yang sudah berubah tanggal dan teknisinya sudah diisi tetap tampil (tandai SUDAH DI JADWALKAN)
 // Pending untuk tanggal tertentu. WO yang sudah berubah tanggal dan teknisinya terisi tetap ada (ditandai done)
 // agar total install + pending tidak turun.
-function snapDay(off,tm,cur,W){
- const key='apmPend'+off,iso=isoJS(tm);
- let snap=null;try{snap=JSON.parse(localStorage.getItem(key)||'null')}catch(e){snap=null}
- if(!snap||snap.date!==iso)snap={date:iso,items:{}};
- cur.forEach(r=>{snap.items[r.wo]={sched:isoJS(r.sched),tek:String(r.tek||'').trim()}});
- try{localStorage.setItem(key,JSON.stringify(snap))}catch(e){}
- const byWo=new Map(W.map(r=>[r.wo,r]));
- const list=cur.map(r=>({...r,done:false}));
- Object.entries(snap.items).forEach(([wo,it])=>{
-   if(cur.some(r=>r.wo===wo))return;
-   const c=byWo.get(wo);if(!c)return;
-   const changed=c.sched?isoJS(c.sched)!==it.sched:c.s==='LAIN';
-   if(changed&&String(c.tek||'').trim())list.push({...c,done:true});
- });
- return list;
-}
+function snapDay(off,tm,cur,W){ return cur.map(r=>({...r,done:false})) }
 function pendPanel(bi,label,rows){
  const list=rows||bi.pend;
  const tr=list.map(r=>[r.wo,r.cust,r.dist,r.tek,r.done?pill(T('terjadwal'),'ok'):pill(T('st_pending'),'wr'),
@@ -1249,7 +1237,7 @@ function drawOverview(){
  $('out').classList.toggle('enter',Date.now()<(S.enterUntil||0));
  setCtl('');
  const W=(Array.isArray(S.D.wo)?woNorm(S.D.wo):[]);const keys=keysOf(W,r=>ym(r.d));const k=keys.includes(ym(new Date()))?ym(new Date()):keys[0];
- const f=k!=null?W.filter(r=>ym(r.d)===k):[];const n=f.length,c=t=>f.filter(r=>r.s===t).length,pc=t=>n?(c(t)/n*100).toFixed(1)+'%':'0%';
+ const f=W;const n=f.length,c=t=>f.filter(r=>r.s===t).length,pc=t=>n?(c(t)/n*100).toFixed(1)+'%':'0%';
  const B=S.D.barang;let low=0,rusakT=0,akhirT=0,namesT=0;
  if(B){const pcs=B.rekap.filter(r=>r[0]!==DW);low=B.rekap.filter(r=>{const aw=+r[2]||0;return aw>0&&(+r[6])<=aw*BARANG_LIMIT}).length;
    rusakT=pcs.reduce((s,r)=>s+(+r[5]||0),0);akhirT=pcs.reduce((s,r)=>s+(+r[6]||0),0)}
@@ -1272,7 +1260,7 @@ function drawOverview(){
  const sub=x=>fill(T('jd_plus'),{a:x.base==null?'-':x.base,b:x.pend.length});
  $('out').innerHTML=`
  ${greetHTML()}
- <div class="ov-h"><h3>${T('ov_wo')}</h3><small>${k!=null?E(monLabel(k)):'-'}</small></div>
+ <div class="ov-h"><h3>${T('ov_wo')}</h3><small>${T('ov_allmonths')}</small></div>
  <div class="ov12 g4">
   ${card(T('wo_total'),W.length,T('ov_allmonths'),'var(--ac)',"go('wo')")}
   ${card(T('st_done'),pc('DONE'),c('DONE')+' WO','var(--ok)',"go('wo')")}
