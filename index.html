@@ -589,6 +589,7 @@ nav a.ext:hover .xo{transform:translate(2px,-2px)}
 .quake.q1{animation-delay:.8s}.quake.q2{animation-delay:1.6s}
 @keyframes quakeRing{0%{transform:scale(1);opacity:.95}100%{transform:scale(3.6);opacity:0}}
 @media(max-width:980px){.quake{animation:none!important}}
+.kecsel{margin-left:auto;margin-right:12px;font-family:'Righteous',cursive;font-size:12px;padding:6px 10px;border:2px solid var(--ink);border-radius:10px;background:var(--cream2);color:var(--ink);max-width:200px}
 </style>
 </head>
 <body>
@@ -614,7 +615,7 @@ nav a.ext:hover .xo{transform:translate(2px,-2px)}
 </div>
 
 <script>
-const API='https://script.google.com/macros/s/AKfycbwtVxvuwqRUyKhPmnFvyAmaA_plZd0V_G78Pg1v9Gs7VETkeKDjRKGd2QhlZS-g_3lDcA/exec';
+const API='https://script.google.com/macros/s/AKfycbz6XlWb-3JXrWt2rusULMriXywWWTG0hAblhoqGwmW3g1XDxPjDJkYGeXTADqwpA-bJbw/exec';
 const BARANG_LIMIT=0.35;           // Segera Request: stok akhir <= 35% stok awal
 const MENIPIS_LIMIT=0.40;          // Stok Menipis: stok akhir <= 40% stok awal
 const DW='H-008';                  // DropWire 1 Core: satuan meter
@@ -649,7 +650,7 @@ const TX={
  wo_hc:[['Bulan','Total','Done','Done %','Pending','Pending %','Cancel','Cancel %','Lainnya','Selisih Total'],['Month','Total','Done','Done %','Pending','Pending %','Cancel','Cancel %','Other','Change in Total']],
  wo_hr:[['Reference Code','Subscriber','Teknisi','Jadwal Ulang','Sisa'],['Reference Code','Subscriber','Technician','Reschedule','Remaining']],
  wo_overdue:['Lewat jadwal','Overdue'], wo_today:['Hari ini','Today'],
- st_done:['Done','Done'], st_pending:['Pending','Pending'], st_cancel:['Cancel','Cancel'], st_working:['Sedang Di Kerjakan Hari Ini','Being Worked On Today'], st_belum:['Belum Dikerjakan','Not Started Yet'], card_resched:['JADWAL ULANG PENDINGAN','RESCHEDULED PENDING'], card_resched_t:['Jadwal Ulang Pendingan','Rescheduled Pending'], inv_title:['Submit Invoice','Submit Invoice'], inv_h:[['Tanggal','Reference Code','Submit Invoice'],['Date','Reference Code','Submit Invoice']], sd_besok:['Sudah Dijadwalkan Besok','Scheduled for Tomorrow'], sd_hari:['Sudah Dijadwalkan Hari Ini','Scheduled for Today'], sd_tgl:['Sudah Dijadwalkan {tgl}','Scheduled for {tgl}'], ov_allmonths:['Semua bulan','All months'], dt_from:['Dari','From'], dt_to:['Sampai','To'], dt_reset:['Reset','Reset'],
+ st_done:['Done','Done'], st_pending:['Pending','Pending'], st_cancel:['Cancel','Cancel'], st_working:['Sedang Di Kerjakan Hari Ini','Being Worked On Today'], st_belum:['Belum Dikerjakan','Not Started Yet'], card_resched:['JADWAL ULANG PENDINGAN','RESCHEDULED PENDING'], card_resched_t:['Jadwal Ulang Pendingan','Rescheduled Pending'], inv_title:['Submit Invoice','Submit Invoice'], inv_h:[['Tanggal','Reference Code','Subscriber','Submit Invoice'],['Date','Reference Code','Subscriber','Submit Invoice']], sd_besok:['Sudah Dijadwalkan Besok','Scheduled for Tomorrow'], sd_hari:['Sudah Dijadwalkan Hari Ini','Scheduled for Today'], sd_tgl:['Sudah Dijadwalkan {tgl}','Scheduled for {tgl}'], ov_allmonths:['Semua bulan','All months'], dt_from:['Dari','From'], dt_to:['Sampai','To'], dt_reset:['Reset','Reset'],
  // reminder
  rem_now:['SEGERA – JADWAL ULANG HARI INI','URGENT – RESCHEDULE TODAY'], rem_tmr:['SEGERA – JADWAL ULANG BESOK 16.00','URGENT – RESCHEDULE TOMORROW 16:00'],
  rem_h:['PENGINGAT JADWAL ULANG H-','RESCHEDULE REMINDER D-'], rem_sched:['Jadwal:','Schedule:'],
@@ -770,6 +771,12 @@ function cmpChart(ms){if(!ms.length)return '';
 
 const SMOOTH=()=>'smooth';
 /* ---------- Peta lokasi (laptop) ---------- */
+function kecOf(lat,lng){let best=null,bd=1e9;Object.keys(KEC).forEach(k=>{const c=KEC[k];const d=(c[0]-lat)**2+(c[1]-lng)**2;if(d<bd){bd=d;best=k}});return best}
+function mapKecSelect(all){
+ const cnt={};all.filter(r=>r.s==='DONE'&&r.lat!=null&&r.lng!=null).forEach(r=>{const k=kecOf(+r.lat,+r.lng);cnt[k]=(cnt[k]||0)+1});
+ const cur=S.mapKec||'ALL';
+ return `<select class="kecsel" onchange="S.mapKec=this.value;draw()"><option value="ALL" ${cur==='ALL'?'selected':''}>Semua Kecamatan</option>${Object.keys(KEC).sort().map(k=>`<option value="${k}" ${cur===k?'selected':''}>${k.replace(/\b\w/g,c=>c.toUpperCase()).replace(/\bMas\b/,'Mas')} (${cnt[k]||0})</option>`).join('')}</select>`;
+}
 const KEC={'BEJI':[-6.3850,106.8260],'BOJONGSARI':[-6.4230,106.7480],'CILODONG':[-6.4090,106.8620],'CIMANGGIS':[-6.3720,106.8720],'CINERE':[-6.3410,106.7850],'CIPAYUNG':[-6.3670,106.8540],'LIMO':[-6.3780,106.7800],'PANCORAN MAS':[-6.3980,106.8200],'SAWANGAN':[-6.4160,106.7380],'SUKMAJAYA':[-6.4120,106.8380],'TAPOS':[-6.4050,106.9000]};
 const DEPOK_C=[-6.3990,106.8200];
 let MAP=null;
@@ -783,7 +790,7 @@ function drawMap(rows){
  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'&copy; OpenStreetMap'}).addTo(map);
  // satu titik per alamat (WO Done), angka = jumlah WO di alamat itu
  const g=new Map();
- rows.filter(r=>r.s==='DONE'&&r.lat!=null&&r.lng!=null).forEach(r=>{
+ rows.filter(r=>r.s==='DONE'&&r.lat!=null&&r.lng!=null&&(!S.mapKec||S.mapKec==='ALL'||kecOf(+r.lat,+r.lng)===S.mapKec)).forEach(r=>{
    const k=(+r.lat).toFixed(5)+','+(+r.lng).toFixed(5);
    const e=g.get(k);
    g.set(k,{lat:+r.lat,lng:+r.lng,addr:e?e.addr:String(r.alamat||''),n:(e?e.n:0)+1});
@@ -1000,7 +1007,7 @@ R.wo=function(rows){
  </div>
  <div class="grid two">
   ${lineP}
-  <div class="panel only-laptop"><div class="sec-t"><h3>User By Location</h3><small>${all.filter(r=>r.s==='DONE').length} WO Done</small></div><div id="wmap" class="map-box"></div><div class="legend"><span><i style="background:#f59e0b"></i>Titik = alamat WO Done</span><span>Tooltip: alamat · jumlah WO</span></div></div><div class="panel only-hp"><div class="sec-t"><h3>${T('wo_status')}</h3><small>${T('wo_total')}: ${n}</small></div>
+  <div class="panel only-laptop"><div class="sec-t"><h3>User By Location</h3>${mapKecSelect(all)}<small>${all.filter(r=>r.s==='DONE').length} WO Done</small></div><div id="wmap" class="map-box"></div><div class="legend"><span><i style="background:#f59e0b"></i>Titik = alamat WO Done</span><span>Tooltip: alamat · jumlah WO</span></div></div><div class="panel only-hp"><div class="sec-t"><h3>${T('wo_status')}</h3><small>${T('wo_total')}: ${n}</small></div>
    <div style="display:grid;place-items:center;padding:6px 0"><div style="width:180px;height:180px;border-radius:50%;background:${n?`conic-gradient(#22c55e 0 ${a1}%,#f59e0b ${a1}% ${a2}%,#ef4444 ${a2}% 100%)`:'var(--line)'};display:grid;place-items:center"><div style="width:120px;height:120px;border-radius:50%;background:var(--panel);display:grid;place-items:center;text-align:center"><div><div class="big">${n}</div><small style="color:var(--mu)">Work Order</small></div></div></div></div>
    <div class="legend"><span><i style="background:#22c55e"></i>${T('st_done')}</span><span><i style="background:#f59e0b"></i>${T('st_pending')}</span><span><i style="background:#ef4444"></i>${T('st_cancel')}</span></div></div>
  </div>
@@ -1048,7 +1055,7 @@ R.invoice=function(d){
  setCtl('');
  const list=S.invF==='belum'?d.belum:S.invF==='sudah'?d.sudah:null;
  const cards=`<div class="grid kpis">${card(T('inv_card_sudah'),d.sudah.length,T('inv_sub_sudah'),'var(--ok)',"S.invF='sudah';draw()")}${card(T('inv_card_belum'),d.belum.length,T('inv_sub_belum'),'var(--er)',"S.invF='belum';draw()")}</div>`;
- const det=list?`<div class="panel"><div class="sec-t"><h3>${T(S.invF==='sudah'?'inv_card_sudah':'inv_card_belum')}</h3><small>${list.length} WO</small></div>${tbl(T('inv_h'),list.map(x=>[x[0],x[1],x[2]||T('inv_belum_txt')]))}</div>`:'';
+ const det=list?`<div class="panel"><div class="sec-t"><h3>${T(S.invF==='sudah'?'inv_card_sudah':'inv_card_belum')}</h3><small>${list.length} WO</small></div>${tbl(T('inv_h'),list.map(x=>[x[0],x[1],x[3]||'-',x[2]||T('inv_belum_txt')]))}</div>`:'';
  $('out').innerHTML=cards+det;
 };
 
