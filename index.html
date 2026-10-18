@@ -610,7 +610,7 @@ nav a.ext:hover .xo{transform:translate(2px,-2px)}
 </div>
 
 <script>
-const API='https://script.google.com/macros/s/AKfycbyZEavsLiu1QBfoqzj1-aHhFy4lycTSjdforDsrBlXcyFxfKL4LVcdFZP-gtW8EYVa3tA/exec';
+const API='https://script.google.com/macros/s/AKfycbwtVxvuwqRUyKhPmnFvyAmaA_plZd0V_G78Pg1v9Gs7VETkeKDjRKGd2QhlZS-g_3lDcA/exec';
 const BARANG_LIMIT=0.35;           // Segera Request: stok akhir <= 35% stok awal
 const MENIPIS_LIMIT=0.40;          // Stok Menipis: stok akhir <= 40% stok awal
 const DW='H-008';                  // DropWire 1 Core: satuan meter
@@ -777,22 +777,21 @@ function drawMap(rows){
  const map=L.map(el,{zoomControl:true,scrollWheelZoom:true}).setView(DEPOK_C,11);
  MAP=map;
  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'&copy; OpenStreetMap'}).addTo(map);
+ // satu titik per alamat (WO Done), angka = jumlah WO di alamat itu
  const g=new Map();
- rows.filter(r=>r.s==='DONE').forEach(r=>{
-   const kec=normKec(r.kec)||'LAINNYA',dt=String(r.dist||'').trim()||'-';
-   const k=kec+'|'+dt;const e=g.get(k);
-   g.set(k,{kec,dt,n:(e?e.n:0)+1});
+ rows.filter(r=>r.s==='DONE'&&r.lat!=null&&r.lng!=null).forEach(r=>{
+   const k=(+r.lat).toFixed(5)+','+(+r.lng).toFixed(5);
+   const e=g.get(k);
+   g.set(k,{lat:+r.lat,lng:+r.lng,addr:e?e.addr:String(r.alamat||''),n:(e?e.n:0)+1});
  });
+ const grp=L.featureGroup();
  [...g.values()].forEach(v=>{
-   const c=KEC[v.kec]||DEPOK_C;
-   const isDT1=/DT\s*1/i.test(v.dt),isDT2=/DT\s*2/i.test(v.dt);
-   const off=isDT1?-0.006:isDT2?0.006:0;
-   const dtS=(String(v.dt).match(/DT\s*\d/i)||['DT'])[0].toUpperCase().replace(/\s+/,' ');
-   const icon=L.divIcon({className:'geo-wrap',html:`<span class="geo-pin"></span><span class="geo-lbl"><b>${dtS}</b> · ${v.n}</span>`,iconSize:[14,14],iconAnchor:[7,7]});
-   L.marker([c[0],c[1]+off],{icon})
-     .bindTooltip(`${v.kec} · ${v.dt}: ${v.n} WO Done`,{direction:'top',offset:[0,-10]})
-     .addTo(map);
+   L.circleMarker([v.lat,v.lng],{radius:5,color:'#2a1a14',weight:1.5,fillColor:'#f59e0b',fillOpacity:.92})
+     .bindTooltip(E(v.addr)+' · '+v.n+' WO Done',{direction:'top'})
+     .addTo(grp);
  });
+ grp.addTo(map);
+ if(g.size)map.fitBounds(grp.getBounds(),{padding:[20,20],maxZoom:14});
 }
 /* ---------- navigasi & kerangka ---------- */
 const NC={dashboard:['#2c7b82','#1d4f55','#fff8e8'],absensi:['#d6262b','#8e1a1c','#fff8e8'],kpi:['#2f8f5b','#14532d','#fff8e8'],wo:['#f2b843','#e8772e','#2a1a14'],barang:['#7c3aed','#4c1d95','#fff8e8'],jadwal:['#0ea5e9','#1d4ed8','#fff8e8']};
@@ -905,9 +904,10 @@ function woNorm(rows){
    let s=null,resched=false,sched=null;
    if(/done|terinstal|installed/i.test(rm))s='DONE';else if(/cancel|batal/i.test(rm))s='CANCEL';
    else if(/CANCEL/.test(st))s='CANCEL';else if(/PEND/.test(st))s='PENDING';else if(/DONE|COMPLETE/.test(st))s='DONE';
+   if(!s&&/resched|reshedule|jadwal\s*ulang/i.test(rm+' '+(r.ket||'')+' '+st))s='PENDING';
    if(s==='DONE'||s==='CANCEL'){if(prev){delete WOH[r.wo];hchg=true}}
    else if(s==='PENDING'){
-     sched=pd(rm+' '+(r.ket||''));
+     sched=pd(rm+' '+(r.ket||'')+' '+st);
      const rs=!!(prev&&prev.rs)||!!(prev&&prev.tgl&&prev.tgl!==tg);
      if(!prev||prev.tgl!==tg||!!prev.rs!==rs){WOH[r.wo]={tgl:tg,rs};hchg=true}
      resched=rs;
@@ -952,7 +952,9 @@ R.wo=function(rows){
  const n=base.length,c=t=>base.filter(r=>r.s===t).length,pc=t=>n?c(t)/n*100:0;
  const cR=base.filter(r=>r.resched).length;
  const bc=t=>base.filter(r=>r.s===t).length;
- S.cache=S.wf==='ALL'?base:(S.wf==='RESCHED'?base.filter(r=>r.resched):base.filter(r=>r.s===S.wf));
+ const HW=['DONE','CANCEL','RESCHED'];
+ const listBase=useDate?base:(HW.includes(S.wf)?all:f);
+ S.cache=S.wf==='ALL'?(useDate?base:f):(S.wf==='RESCHED'?listBase.filter(r=>r.resched):listBase.filter(r=>r.s===S.wf));
  const a1=pc('DONE'),a2=a1+pc('PENDING');
  const periodTxt=useDate?`${S.dFrom||'…'} – ${S.dTo||'…'}`:(isAll?T('wo_allmonths'):monLabel(k));
  const ms=keys.slice().sort((a,b)=>a-b).map(kk=>{const g=all.filter(r=>ym(r.d)===kk),cn=s=>g.filter(r=>r.s===s).length;
@@ -967,6 +969,7 @@ R.wo=function(rows){
    lineP=`<div class="panel"><div class="sec-t"><h3>${T('wo_title')}</h3><small>${mName(mo)} ${y}</small></div>${line(tot,dn)}</div>`;
  }
  const pend=all.filter(r=>r.s==='PENDING'&&r.sched).map(r=>({...r,diff:Math.round((day0(r.sched)-today)/864e5)})).sort((a,b)=>a.diff-b.diff);
+ const panelPend=pend.filter(r=>r.diff!==0);
  const rem=pend.filter(r=>r.diff>=0&&r.diff<=3).map(r=>{const urgent=r.diff===0||(r.diff===1&&now.getHours()>=16);return{...r,urgent}});
  const remH=rem.length?`<div class="grid" style="margin-bottom:16px">${rem.map(r=>`<div class="alert ${r.urgent?'red blink':'amber blink-a'}"><div style="flex:1"><b>${r.urgent?(r.diff===0?T('rem_now'):T('rem_tmr')):T('rem_h')+r.diff}</b>${E(r.wo)} · ${E(r.cust)} · ${E(r.tek)}<br><span style="opacity:.85">${T('rem_sched')} ${fmtLong(r.sched)}</span></div></div>`).join('')}</div>`:'';
  const allT=all.length,allDone=all.filter(r=>r.s==='DONE').length;
@@ -977,7 +980,8 @@ R.wo=function(rows){
    const lab=m.k===k?`<b style="color:var(--ac)">${E(monLabel(m.k))}</b>`:E(monLabel(m.k));
    return [{h:lab},m.t,m.done,pp(m.done),m.pend,pp(m.pend),m.canc,pp(m.canc),m.lain,dh]});
  const WL={ALL:T('wo_all'),DONE:T('st_done'),PENDING:T('st_pending'),CANCEL:T('st_cancel'),LAIN:T('st_working'),BELUM:T('st_belum'),RESCHED:T('card_resched')};
- const seg=[['ALL',T('wo_all'),base.length],['DONE',T('st_done'),bc('DONE')],['PENDING',T('st_pending'),bc('PENDING')],['CANCEL',T('st_cancel'),bc('CANCEL')],['LAIN',T('st_working'),bc('LAIN')],['RESCHED',T('card_resched_t'),cR]]
+ const cntOf=t=>{if(useDate)return t==='RESCHED'?cR:base.filter(r=>r.s===t).length;if(HW.includes(t))return t==='RESCHED'?all.filter(r=>r.resched).length:all.filter(r=>r.s===t).length;return t==='RESCHED'?cR:f.filter(r=>r.s===t).length;};
+ const seg=[['ALL',T('wo_all'),base.length],['DONE',T('st_done'),cntOf('DONE')],['PENDING',T('st_pending'),cntOf('PENDING')],['CANCEL',T('st_cancel'),cntOf('CANCEL')],['LAIN',T('st_working'),cntOf('LAIN')],['RESCHED',T('card_resched_t'),cntOf('RESCHED')]]
    .map(([v,t,q])=>`<button class="${S.wf===v?'on':''}" onclick="wfSet('${v}')">${E(t)} · ${q}</button>`).join('');
  $('out').innerHTML=`${remH}
  <div class="grid kpis">
@@ -990,7 +994,7 @@ R.wo=function(rows){
  </div>
  <div class="grid two">
   ${lineP}
-  <div class="panel only-laptop"><div class="sec-t"><h3>User By Location</h3><small>${base.filter(r=>r.s==='DONE').length} WO Done</small></div><div id="wmap" class="map-box"></div><div class="legend"><span><i style="background:#f59e0b"></i>Lokasi WO Done</span><span>Label: DT · jumlah WO Done</span></div></div><div class="panel only-hp"><div class="sec-t"><h3>${T('wo_status')}</h3><small>${T('wo_total')}: ${n}</small></div>
+  <div class="panel only-laptop"><div class="sec-t"><h3>User By Location</h3><small>${base.filter(r=>r.s==='DONE').length} WO Done</small></div><div id="wmap" class="map-box"></div><div class="legend"><span><i style="background:#f59e0b"></i>Titik = alamat WO Done</span><span>Tooltip: alamat · jumlah WO</span></div></div><div class="panel only-hp"><div class="sec-t"><h3>${T('wo_status')}</h3><small>${T('wo_total')}: ${n}</small></div>
    <div style="display:grid;place-items:center;padding:6px 0"><div style="width:180px;height:180px;border-radius:50%;background:${n?`conic-gradient(#22c55e 0 ${a1}%,#f59e0b ${a1}% ${a2}%,#ef4444 ${a2}% 100%)`:'var(--line)'};display:grid;place-items:center"><div style="width:120px;height:120px;border-radius:50%;background:var(--panel);display:grid;place-items:center;text-align:center"><div><div class="big">${n}</div><small style="color:var(--mu)">Work Order</small></div></div></div></div>
    <div class="legend"><span><i style="background:#22c55e"></i>${T('st_done')}</span><span><i style="background:#f59e0b"></i>${T('st_pending')}</span><span><i style="background:#ef4444"></i>${T('st_cancel')}</span></div></div>
  </div>
@@ -1000,8 +1004,8 @@ R.wo=function(rows){
   ${tbl(T('wo_hc'),cmpRows)}
   ${best?`<p style="color:var(--mu);font-size:12px;margin:10px 0 0">${T('wo_best')}: <b>${E(monLabel(best.k))}</b> (${(best.done/best.t*100).toFixed(1)}%)</p>`:''}
  </div>
- <div class="panel"><div class="sec-t"><h3>${T('wo_resched')}</h3><small>${pend.length} WO</small></div>
-  ${tbl(T('wo_hr'),pend.map(r=>{const t=r.diff<0?T('wo_overdue'):r.diff===0?T('wo_today'):'H-'+r.diff;return [r.wo,r.cust,r.tek,fmtLong(r.sched),pill(t,r.diff<0?'er':r.diff<=1?'wr':'in')]}))}</div>
+ <div class="panel"><div class="sec-t"><h3>${T('wo_resched')}</h3><small>${panelPend.length} WO</small></div>
+  ${tbl(T('wo_hr'),panelPend.map(r=>{const t=r.diff<0?T('wo_overdue'):r.diff===0?T('wo_today'):'H-'+r.diff;return [r.wo,r.cust,r.tek,fmtLong(r.sched),pill(t,r.diff<0?'er':r.diff<=1?'wr':'in')]}))}</div>
  ${invPanel(base)}
  <div class="panel" id="wdet"><div class="sec-t"><h3>${T('wo_detail')} · ${E(WL[S.wf])}</h3><input id="wq" class="search" placeholder="${T('wo_search')}" oninput="S.q=this.value;woTab()"></div>
   <div class="dtr"><label>${T('dt_from')} <input type="date" value="${S.dFrom||''}" onchange="S.dFrom=this.value;draw()"></label><label>${T('dt_to')} <input type="date" value="${S.dTo||''}" onchange="S.dTo=this.value;draw()"></label><button onclick="S.dFrom='';S.dTo='';draw()">${T('dt_reset')}</button></div><div class="seg" style="margin-bottom:14px">${seg}</div><div id="wt"></div></div>`;
