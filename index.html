@@ -601,6 +601,8 @@ nav a.ext:hover .xo{transform:translate(2px,-2px)}
 @keyframes imsSheen{0%{transform:translateX(-100%)}60%,100%{transform:translateX(100%)}}
 @keyframes imsBob{0%,100%{transform:translate(0,0)}50%{transform:translate(4px,-4px)}}
 @media(max-width:980px){.ims,.ims *,.ims:before{animation:none!important}.ims .ims-t{font-size:38px}.ims{padding:16px 18px}.ims .ims-go{width:46px;height:46px;font-size:20px}}
+.diagrow{margin:0 0 12px}
+.diagbtn{font-family:'Righteous',cursive;font-size:13px;padding:8px 14px;border:3px solid var(--ink);border-radius:12px;background:var(--cream2);color:var(--ink);box-shadow:3px 3px 0 var(--ink);cursor:pointer}
 </style>
 </head>
 <body>
@@ -796,7 +798,8 @@ function drawMap(rows){
  const el=document.getElementById('wmap');
  if(!el||!window.L)return;
  if(MAP){MAP.remove();MAP=null}
- const map=L.map(el,{zoomControl:true,scrollWheelZoom:true}).setView(DEPOK_C,11);
+ const map=L.map(el,{zoomControl:true,scrollWheelZoom:true,preferCanvas:true}).setView(DEPOK_C,11);
+ const svgR=L.svg({padding:.5});
  MAP=map;
  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'&copy; OpenStreetMap'}).addTo(map);
  // satu titik per alamat (WO Done), angka = jumlah WO di alamat itu
@@ -808,7 +811,7 @@ function drawMap(rows){
  });
  const grp=L.featureGroup();
  [...g.values()].forEach(v=>{
-   [0,1,2].forEach(i=>L.circleMarker([v.lat,v.lng],{radius:5,color:'#dc2626',weight:2,fill:false,interactive:false,className:'quake q'+i}).addTo(grp));
+   if(S.mapKec&&S.mapKec!=='ALL')[0,1,2].forEach(i=>L.circleMarker([v.lat,v.lng],{renderer:svgR,radius:5,color:'#dc2626',weight:2,fill:false,interactive:false,className:'quake q'+i}).addTo(grp));
    L.circleMarker([v.lat,v.lng],{radius:5,color:'#2a1a14',weight:1.5,fillColor:'#f59e0b',fillOpacity:.92})
      .bindTooltip(E(v.addr)+' · '+v.n+' WO Done',{direction:'top'})
      .addTo(grp);
@@ -922,6 +925,7 @@ function woNorm(rows){
  if(WOH===null){try{WOH=JSON.parse(localStorage.getItem('apmWoHist')||'{}')}catch(e){WOH={}}}
  let hchg=false;
  const todayT=+day0(new Date()),tomT=todayT+864e5;
+ const UNDATED=new Date(1970,0,1);
  const out=keep.map(r=>{
    const rm=String(r.rem||''),st=String(r.st||'').toUpperCase(),d=pd(r.tgl),tg=d?isoJS(d):'';
    const prev=WOH[r.wo];
@@ -947,8 +951,8 @@ function woNorm(rows){
      const dd=+day0(d);
      rem=dd===todayT?T('sd_hari'):dd===tomT?T('sd_besok'):fill(T('sd_tgl'),{tgl:d.toLocaleDateString(locale(),{day:'numeric',month:'short',year:'numeric'})});
    }
-   return{...r,s,d,sched:s==='PENDING'?sched:null,resched,rem}
- }).filter(r=>r.d);
+   return{...r,s,d:d||UNDATED,nd:!d,sched:s==='PENDING'?sched:null,resched,rem}
+ });
  if(hchg){try{localStorage.setItem('apmWoHist',JSON.stringify(WOH))}catch(e){}}
  return out;
 }
@@ -959,10 +963,35 @@ function invPanel(base){
  return `<div class="panel"><div class="sec-t"><h3>${T('inv_title')}</h3><small>${rows.length} WO</small></div>`
    +tbl(T('inv_h'),rows.map(r=>[r.tgl,r.wo,r.cust,stLabel(r.s),String(r.inv)]))+`</div>`;
 }
+function diagBox(rows){
+ const btn=`<div class="diagrow"><button class="diagbtn" onclick="showDiag()">${S.diag?'Tutup cek data sheet':'Cek data sheet'}</button></div>`;
+ if(!S.diag)return btn;
+ if(S.diag.err)return btn+`<div class="err">${E(S.diag.err)}</div>`;
+ const d=S.diag, arr=Array.isArray(rows)?rows:[];
+ const uniq=new Set(arr.map(r=>String(r.wo||'').trim().toUpperCase())).size;
+ const all=woNorm(arr);
+ const stRows=Object.entries(d.status).sort((a,b)=>b[1]-a[1]);
+ return btn+`<div class="panel"><div class="sec-t"><h3>Cek data sheet</h3></div>`
+  +tbl(['Keterangan','Jumlah'],[
+    ['Baris berisi data di sheet',d.baris],
+    ['Baris tanpa Reference Code (diabaikan)',d.tanpaRef],
+    ['Baris dengan tanggal tidak terbaca',d.tglGagal+(d.contohTgl.length?' · contoh: '+d.contohTgl.join(' | '):'')],
+    ['WO terbaca (sebelum hapus duplikat)',arr.length],
+    ['Duplikat nomor WO yang dihapus',arr.length-uniq],
+    ['WO yang dipakai dashboard',all.length]])
+  +`<div class="sec-t" style="margin-top:12px"><h3>Rincian Status</h3></div>`
+  +tbl(['Status (dari sheet)','Jumlah'],stRows)+`</div>`;
+}
+async function showDiag(){
+ if(S.diag){S.diag=null;draw();return}
+ const r=await api({menu:'wodiag'});
+ S.diag=(r&&r.ok)?r.d:{err:'Gagal mengambil data'};
+ draw();
+}
 R.wo=function(rows){
- if(!Array.isArray(rows)){$('out').innerHTML=`<div class="err">${E(rows&&rows.err||'Data WO tidak tersedia')}</div>`;return}
+ if(!Array.isArray(rows)){$('out').innerHTML=`${diagBox(rows)}<div class="err">${E(rows&&rows.err||'Data WO tidak tersedia')}</div>`;return}
  const all=woNorm(rows),now=new Date(),today=day0(now),curK=ym(today);
- const keys=keysOf(all,r=>ym(r.d));
+ const keys=keysOf(all.filter(r=>!r.nd),r=>ym(r.d));
  if(!keys.length){const smp=(Array.isArray(rows)?rows:[]).slice(0,3).map(r=>String(r.tgl)).join(' | ')||'-';$('out').innerHTML=empty(T('nodata')+' · baris dibaca: '+(Array.isArray(rows)?rows.length:0)+' · contoh tanggal: '+smp);return}
  if(!S.k)S.k=String(keys.includes(curK)?curK:keys[0]);
  const isAll=S.k==='all';
@@ -989,7 +1018,7 @@ R.wo=function(rows){
  }else{
    const y=Math.floor(k/100),mo=k%100,days=new Date(y,mo+1,0).getDate();
    const tot=Array(days).fill(0),dn=Array(days).fill(0);
-   f.forEach(r=>{const i=r.d.getDate()-1;tot[i]++;if(r.s==='DONE')dn[i]++});
+   f.forEach(r=>{if(r.nd)return;const i=r.d.getDate()-1;tot[i]++;if(r.s==='DONE')dn[i]++});
    lineP=`<div class="panel"><div class="sec-t"><h3>${T('wo_title')}</h3><small>${mName(mo)} ${y}${(Array.isArray(rows)?rows:[]).filter(r=>!pd(r.tgl)).length?' · ⚠ '+(Array.isArray(rows)?rows:[]).filter(r=>!pd(r.tgl)).length+' baris tanggal tidak terbaca':''}</small></div>${line(tot,dn)}</div>`;
  }
  const pend=all.filter(r=>r.s==='PENDING'&&r.sched).map(r=>({...r,diff:Math.round((day0(r.sched)-today)/864e5)})).sort((a,b)=>a.diff-b.diff);
@@ -1260,7 +1289,7 @@ function greetHTML(){const b=BAND(new Date().getHours()),g=GREET[b];
 function drawOverview(){
  $('out').classList.toggle('enter',Date.now()<(S.enterUntil||0));
  setCtl('');
- const W=(Array.isArray(S.D.wo)?woNorm(S.D.wo):[]);const keys=keysOf(W,r=>ym(r.d));const k=keys.includes(ym(new Date()))?ym(new Date()):keys[0];
+ const W=(Array.isArray(S.D.wo)?woNorm(S.D.wo):[]);const keys=keysOf(W.filter(r=>!r.nd),r=>ym(r.d));const k=keys.includes(ym(new Date()))?ym(new Date()):keys[0];
  const f=W;const n=f.length,c=t=>f.filter(r=>r.s===t).length,pc=t=>n?(c(t)/n*100).toFixed(1)+'%':'0%';
  const B=S.D.barang;let low=0,rusakT=0,akhirT=0,namesT=0;
  if(B){const pcs=B.rekap.filter(r=>r[0]!==DW);low=B.rekap.filter(r=>{const aw=+r[2]||0;return aw>0&&(+r[6])<=aw*BARANG_LIMIT}).length;
