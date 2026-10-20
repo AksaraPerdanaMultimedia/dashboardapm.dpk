@@ -659,7 +659,7 @@ const TX={
  wo_cmp_sum:['bulan · total','months · total'], wo_best:['Persentase Done tertinggi','Highest Done rate'],
  wo_resched:['Jadwal Ulang (Pending)','Rescheduled (Pending)'], wo_detail:['Detail Work Order','Work Order Details'],
  wo_search:['Cari WO, customer, teknisi...','Search WO, customer, technician...'],
- wo_h:[['No','Tanggal','Reference Code','Subscriber','District','Teknisi','Status','Keterangan','Update Remark'],['No','Date','Reference Code','Subscriber','District','Technician','Status','Notes','Update Remark']],
+ wo_h:[['No','Tanggal','Reference Code','Subscriber','District','Teknisi','Status','Keterangan'],['No','Date','Reference Code','Subscriber','District','Technician','Status','Notes']],
  wo_hc:[['Bulan','Total','Done','Done %','Pending','Pending %','Cancel','Cancel %','Lainnya','Selisih Total'],['Month','Total','Done','Done %','Pending','Pending %','Cancel','Cancel %','Other','Change in Total']],
  wo_hr:[['Reference Code','Subscriber','Teknisi','Jadwal Ulang','Sisa'],['Reference Code','Subscriber','Technician','Reschedule','Remaining']],
  wo_overdue:['Lewat jadwal','Overdue'], wo_today:['Hari ini','Today'],
@@ -1022,7 +1022,7 @@ R.wo=function(rows){
    lineP=`<div class="panel"><div class="sec-t"><h3>${T('wo_title')}</h3><small>${mName(mo)} ${y}${(Array.isArray(rows)?rows:[]).filter(r=>!pd(r.tgl)).length?' · ⚠ '+(Array.isArray(rows)?rows:[]).filter(r=>!pd(r.tgl)).length+' baris tanggal tidak terbaca':''}</small></div>${line(tot,dn)}</div>`;
  }
  const pend=all.filter(r=>r.s==='PENDING'&&r.sched).map(r=>({...r,diff:Math.round((day0(r.sched)-today)/864e5)})).sort((a,b)=>a.diff-b.diff);
- const panelPend=pend.filter(r=>r.diff!==0);
+ const panelPend=pend.filter(r=>r.diff>=0);
  const rem=pend.filter(r=>r.diff>=0&&r.diff<=3).map(r=>{const urgent=r.diff===0||(r.diff===1&&now.getHours()>=16);return{...r,urgent}});
  const remH=rem.length?`<div class="grid" style="margin-bottom:16px">${rem.map(r=>`<div class="alert ${r.urgent?'red blink':'amber blink-a'}"><div style="flex:1"><b>${r.urgent?(r.diff===0?T('rem_now'):T('rem_tmr')):T('rem_h')+r.diff}</b>${E(r.wo)} · ${E(r.cust)} · ${E(r.tek)}<br><span style="opacity:.85">${T('rem_sched')} ${fmtLong(r.sched)}</span></div></div>`).join('')}</div>`:'';
  const allT=all.length,allDone=all.filter(r=>r.s==='DONE').length;
@@ -1068,7 +1068,7 @@ function wfSet(t){S.wf=t;S.q='';draw();const e=$('wdet');if(e){e.classList.add('
 function woTab(){const q=S.q.toLowerCase();const f=(S.cache||[]).filter(r=>!q||JSON.stringify(r).toLowerCase().includes(q));
  const C={DONE:'ok',PENDING:'wr',CANCEL:'er',LAIN:'in',BELUM:'in'};
  $('wt').innerHTML=tbl(T('wo_h'),
-  f.map((r,i)=>[i+1,r.tgl,r.wo,r.cust,r.dist,r.tek,pill(stLabel(r.s),C[r.s]),{h:`<span class="wrapc">${E(r.ket)}</span>`},{h:`<span class="wrapc">${E(r.rem)}</span>`}]),'auto')}
+  f.map((r,i)=>[i+1,r.tgl,r.wo,r.cust,r.dist,r.tek,pill(stLabel(r.s),C[r.s]),{h:`<span class="wrapc">${E(r.ket)}</span>`}]),'auto')}
 
 /* ---------- KPI ---------- */
 R.kpi=function(d){if(d.err){$('out').innerHTML=`<div class="err">${E(d.err)}</div>`;return}const ks=Object.keys(d.months||{});if(!ks.length){$('out').innerHTML=empty();return}
@@ -1254,8 +1254,8 @@ R.jadwal=function(d){
  setCtl('');
  const H=d.hari||{},B=d.besok||{},hi=hariInfo(),bi=besokInfo();
  $('out').innerHTML=`<div class="grid kpis">
-  ${card(T('jd_hari'),`<span class="big">${hi.total}</span>`,jdSub(hi),'var(--ac)')}
-  ${card(T('jd_besok'),`<span class="big">${bi.total}</span>`,jdSub(bi),'var(--ok)')}
+  ${card(T('jd_hari'),`<span class="big">${hi.base==null?'-':hi.total}</span>`,jdSub(hi),'var(--ac)')}
+  ${card(T('jd_besok'),`<span class="big">${bi.base==null?'-':bi.total}</span>`,jdSub(bi),'var(--ok)')}
  </div>
  ${hi.pend.length?pendPanel(hi,T('hari_lbl').toUpperCase()):''}
  ${bi.pend.length?pendPanel(bi,T('besok_lbl').toUpperCase()):''}
@@ -1334,8 +1334,8 @@ function drawOverview(){
  </div>
  <div class="ov-h"><h3>${T('ov_jadwal')}</h3></div>
  <div class="ov12 g2">
-  ${card(T('jd_hari'),`<span class="big">${hi.total}</span>`,sub(hi),'var(--ac)',"go('jadwal')")}
-  ${card(T('jd_besok'),`<span class="big">${bi.total}</span>`,sub(bi),'var(--ok)',"go('jadwal')")}
+  ${card(T('jd_hari'),`<span class="big">${hi.base==null?'-':hi.total}</span>`,sub(hi),'var(--ac)',"go('jadwal')")}
+  ${card(T('jd_besok'),`<span class="big">${bi.base==null?'-':bi.total}</span>`,sub(bi),'var(--ok)',"go('jadwal')")}
  </div>`}
 
 /* ---------- SLIP GAJI (opsional, dimatikan di Code.gs) ---------- */
