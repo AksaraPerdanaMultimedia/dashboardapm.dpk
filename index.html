@@ -1037,9 +1037,8 @@ R.wo=function(rows){
  const n=base.length,c=t=>base.filter(r=>r.s===t).length,pc=t=>n?c(t)/n*100:0;
  const cR=base.filter(r=>r.resched).length;
  const bc=t=>base.filter(r=>r.s===t).length;
- const HW=['DONE','CANCEL','RESCHED'];
- const listBase=useDate?base:(HW.includes(S.wf)?all:f);
- S.cache=S.wf==='ALL'?(useDate?base:f):(S.wf==='RESCHED'?listBase.filter(r=>r.resched):listBase.filter(r=>r.s===S.wf));
+ const listBase=base;
+ S.cache=S.wf==='ALL'?base:(S.wf==='RESCHED'?base.filter(r=>r.resched):base.filter(r=>r.s===S.wf));
  const a1=pc('DONE'),a2=a1+pc('PENDING');
  const periodTxt=useDate?`${S.dFrom||'…'} – ${S.dTo||'…'}`:(isAll?T('wo_allmonths'):monLabel(k));
  const ms=keys.slice().sort((a,b)=>a-b).map(kk=>{const g=all.filter(r=>ym(r.d)===kk),cn=s=>g.filter(r=>r.s===s).length;
@@ -1065,7 +1064,7 @@ R.wo=function(rows){
    const lab=m.k===k?`<b style="color:var(--ac)">${E(monLabel(m.k))}</b>`:E(monLabel(m.k));
    return [{h:lab},m.t,m.done,pp(m.done),m.pend,pp(m.pend),m.canc,pp(m.canc),m.lain,dh]});
  const WL={ALL:T('wo_all'),DONE:T('st_done'),PENDING:T('st_pending'),CANCEL:T('st_cancel'),LAIN:T('st_working'),BELUM:T('st_belum'),RESCHED:T('card_resched')};
- const cntOf=t=>{if(useDate)return t==='RESCHED'?cR:base.filter(r=>r.s===t).length;if(HW.includes(t))return t==='RESCHED'?all.filter(r=>r.resched).length:all.filter(r=>r.s===t).length;return t==='RESCHED'?cR:f.filter(r=>r.s===t).length;};
+ const cntOf=t=>t==='RESCHED'?base.filter(r=>r.resched).length:base.filter(r=>r.s===t).length;
  const seg=[['ALL',T('wo_all'),base.length],['DONE',T('st_done'),cntOf('DONE')],['PENDING',T('st_pending'),cntOf('PENDING')],['CANCEL',T('st_cancel'),cntOf('CANCEL')],['LAIN',T('st_working'),cntOf('LAIN')],['RESCHED',T('card_resched_t'),cntOf('RESCHED')]]
    .map(([v,t,q])=>`<button class="${S.wf===v?'on':''}" onclick="wfSet('${v}')">${E(t)} · ${q}</button>`).join('');
  $('out').innerHTML=`${remH}
