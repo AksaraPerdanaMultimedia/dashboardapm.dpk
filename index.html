@@ -2,7 +2,7 @@
 <html lang="id" data-theme="dark">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>SO DEPOK</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Righteous&family=Shrikhand&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -603,6 +603,38 @@ nav a.ext:hover .xo{transform:translate(2px,-2px)}
 @media(max-width:980px){.ims,.ims *,.ims:before{animation:none!important}.ims .ims-t{font-size:38px}.ims{padding:16px 18px}.ims .ims-go{width:46px;height:46px;font-size:20px}}
 .diagrow{margin:0 0 12px}
 .diagbtn{font-family:'Righteous',cursive;font-size:13px;padding:8px 14px;border:3px solid var(--ink);border-radius:12px;background:var(--cream2);color:var(--ink);box-shadow:3px 3px 0 var(--ink);cursor:pointer}
+/* ===== Kompatibel di HP (layar <= 980px) ===== */
+@media(max-width:980px){
+ html,body{max-width:100%;overflow-x:hidden;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+ *,*:before,*:after{box-sizing:border-box}
+ img,svg,canvas,iframe,video{max-width:100%}
+ input,select,textarea{font-size:16px!important;max-width:100%}
+ input[type=date]{min-width:0;width:100%}
+ main,aside{min-width:0}
+ .layout{min-height:100vh;min-height:100dvh}
+ .tw{-webkit-overflow-scrolling:touch;overflow-x:auto;max-width:100%}
+ .tw th,.tw td{padding:8px 10px;font-size:12px}
+ button,nav a,.grp,.sub>a,.seg button{min-height:40px}
+ .seg{display:flex;flex-wrap:wrap;gap:8px}
+ .seg button{flex:1 1 auto}
+ .legend{flex-wrap:wrap;gap:8px 14px}
+ .head h1,.hl h1{font-size:clamp(20px,6.5vw,26px)}
+ .big{font-size:clamp(24px,7vw,30px)}
+ .kpi .v{font-size:clamp(20px,6vw,26px)}
+ .ov-h{font-size:14px;flex-wrap:wrap}
+ .hero h2{font-size:clamp(18px,5.6vw,24px)}
+ .topbar{top:calc(10px + env(safe-area-inset-top,0px))}
+ .musbtn{bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+ main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+ .musp{max-width:calc(100vw - 24px)}
+}
+@media(max-width:360px){
+ main{padding-left:10px;padding-right:10px}
+ .panel{padding:12px}
+ .kpi .v{font-size:20px}
+ .big{font-size:24px}
+ .tw th,.tw td{padding:6px 8px;font-size:11px}
+}
 </style>
 </head>
 <body>
@@ -657,13 +689,13 @@ const TX={
  wo_title:['Work Order per Tanggal','Work Orders by Date'], wo_status:['Komposisi Status','Status Breakdown'], wo_total:['Total Work Order','Total Work Orders'],
  wo_pctof:['dari total','of total'], wo_all:['Semua','All'], wo_allmonths:['Semua Bulan','All Months'], mus_title:['Musik','Music'], mus_hint:['Tempel link playlist, album, atau lagu Spotify lalu tekan Simpan. Setelah disimpan, musik bisa diputar langsung dari dashboard.','Paste a Spotify playlist, album or track link and press Save. Once saved, you can play music right from the dashboard.'], mus_save:['Simpan','Save'], mus_change:['Ganti link','Change link'], mus_ph:['Tempel link Spotify','Paste Spotify link'], mus_bad:['Link tidak dikenali. Pakai link playlist, album, atau lagu Spotify.','Link not recognized. Use a Spotify playlist, album or track link.'], sudah_jadwal:['SUDAH DI JADWALKAN','ALREADY SCHEDULED'], terjadwal:['Terjadwal','Scheduled'], wr_title:['Report Pengembalian Barang','Returned Items Report'], wh_sudah_return:['Sudah Return','Returned'], st_aman:['Stok Aman','Stock OK'], st_kosong:['Barang Tidak tersedia','Item Not Available'], st_menipis:['Stok Menipis','Low Stock'], wu_title:['Barang Rusak Belum Di-return','Broken Items Not Yet Returned'], wu_h:[['Kode Barang','Nama Barang','Qty','Status'],['Item Code','Item Name','Qty','Status']], st_in_wh:['Tersimpan di Gudang','Stored in Warehouse'], st_not_ret:['Belum Di-return','Not Yet Returned'], wr_unit:['item','items'], wr_h:[['Tanggal Report','Kode','Nama Barang','Jumlah','Keterangan','Tanggal Return'],['Report Date','Code','Item Name','Qty','Notes','Return Date']], abs_late_emp:['Karyawan yang terlambat','Employees who were late'], wo_cmp:['Perbandingan Semua Bulan','All-Month Comparison'],
  wo_cmp_sum:['bulan · total','months · total'], wo_best:['Persentase Done tertinggi','Highest Done rate'],
- wo_resched:['Jadwal Ulang (Pending)','Rescheduled (Pending)'], wo_detail:['Detail Work Order','Work Order Details'],
+ wo_resched:['Case by Case Pending','Case by Case Pending'], wo_detail:['Detail Work Order','Work Order Details'],
  wo_search:['Cari WO, customer, teknisi...','Search WO, customer, technician...'],
  wo_h:[['No','Tanggal','Reference Code','Subscriber','Alamat','Teknisi','Status','Keterangan'],['No','Date','Reference Code','Subscriber','Address','Technician','Status','Notes']],
  wo_hc:[['Bulan','Total','Done','Done %','Pending','Pending %','Cancel','Cancel %','Lainnya','Selisih Total'],['Month','Total','Done','Done %','Pending','Pending %','Cancel','Cancel %','Other','Change in Total']],
- wo_hr:[['Reference Code','Subscriber','Teknisi','Jadwal Ulang','Sisa'],['Reference Code','Subscriber','Technician','Reschedule','Remaining']],
+ wo_hr:[['Reference Code','Subscriber','Alamat','Teknisi','Jadwal Ulang','Sisa'],['Reference Code','Subscriber','Address','Technician','Reschedule','Remaining']],
  wo_overdue:['Lewat jadwal','Overdue'], wo_today:['Hari ini','Today'],
- st_done:['Done','Done'], st_pending:['Pending','Pending'], st_cancel:['Cancel','Cancel'], st_working:['Sedang Di Kerjakan Hari Ini','Being Worked On Today'], st_belum:['Belum Dikerjakan','Not Started Yet'], card_resched:['JADWAL ULANG PENDINGAN','RESCHEDULED PENDING'], card_resched_t:['Jadwal Ulang Pendingan','Rescheduled Pending'], inv_title:['Submit Invoice','Submit Invoice'], inv_h:[['Tanggal','Reference Code','Subscriber','Submit Invoice'],['Date','Reference Code','Subscriber','Submit Invoice']], sd_besok:['Sudah Dijadwalkan Besok','Scheduled for Tomorrow'], sd_hari:['Sudah Dijadwalkan Hari Ini','Scheduled for Today'], sd_tgl:['Sudah Dijadwalkan {tgl}','Scheduled for {tgl}'], ov_allmonths:['Semua bulan','All months'], dt_from:['Dari','From'], dt_to:['Sampai','To'], dt_reset:['Reset','Reset'],
+ st_done:['Done','Done'], st_pending:['Pending','Pending'], st_cancel:['Cancel','Cancel'], st_working:['Sedang Di Kerjakan Hari Ini','Being Worked On Today'], st_belum:['Belum Dikerjakan','Not Started Yet'], card_resched:['CASE BY CASE PENDING','CASE BY CASE PENDING'], card_resched_t:['Case by Case Pending','Case by Case Pending'], inv_title:['Submit Invoice','Submit Invoice'], inv_h:[['Tanggal','Reference Code','Subscriber','Submit Invoice'],['Date','Reference Code','Subscriber','Submit Invoice']], sd_besok:['Sudah Dijadwalkan Besok','Scheduled for Tomorrow'], sd_hari:['Sudah Dijadwalkan Hari Ini','Scheduled for Today'], sd_tgl:['Sudah Dijadwalkan {tgl}','Scheduled for {tgl}'], ov_allmonths:['Semua bulan','All months'], dt_from:['Dari','From'], dt_to:['Sampai','To'], dt_reset:['Reset','Reset'],
  // reminder
  rem_now:['SEGERA – JADWAL ULANG HARI INI','URGENT – RESCHEDULE TODAY'], rem_tmr:['SEGERA – JADWAL ULANG BESOK 16.00','URGENT – RESCHEDULE TOMORROW 16:00'],
  rem_h:['PENGINGAT JADWAL ULANG H-','RESCHEDULE REMINDER D-'], rem_sched:['Jadwal:','Schedule:'],
@@ -1058,7 +1090,7 @@ R.wo=function(rows){
   ${best?`<p style="color:var(--mu);font-size:12px;margin:10px 0 0">${T('wo_best')}: <b>${E(monLabel(best.k))}</b> (${(best.done/best.t*100).toFixed(1)}%)</p>`:''}
  </div>
  <div class="panel"><div class="sec-t"><h3>${T('wo_resched')}</h3><small>${panelPend.length} WO</small></div>
-  ${tbl(T('wo_hr'),panelPend.map(r=>{const t=r.diff<0?T('wo_overdue'):r.diff===0?T('wo_today'):'H-'+r.diff;return [r.wo,r.cust,r.tek,fmtLong(r.sched),pill(t,r.diff<0?'er':r.diff<=1?'wr':'in')]}))}</div>
+  ${tbl(T('wo_hr'),panelPend.map(r=>{const t=r.diff<0?T('wo_overdue'):r.diff===0?T('wo_today'):'H-'+r.diff;return [r.wo,r.cust,{h:`<span class="wrapc">${E(r.alamat||'-')}</span>`},r.tek,fmtLong(r.sched),pill(t,r.diff<0?'er':r.diff<=1?'wr':'in')]}))}</div>
   <div class="panel" id="wdet"><div class="sec-t"><h3>${T('wo_detail')} · ${E(WL[S.wf])}</h3><input id="wq" class="search" placeholder="${T('wo_search')}" oninput="S.q=this.value;woTab()"></div>
   <div class="dtr"><label>${T('dt_from')} <input type="date" value="${S.dFrom||''}" onchange="S.dFrom=this.value;draw()"></label><label>${T('dt_to')} <input type="date" value="${S.dTo||''}" onchange="S.dTo=this.value;draw()"></label><button onclick="S.dFrom='';S.dTo='';draw()">${T('dt_reset')}</button></div><div class="seg" style="margin-bottom:14px">${seg}</div><div id="wt"></div></div>`;
  drawMap(all);
