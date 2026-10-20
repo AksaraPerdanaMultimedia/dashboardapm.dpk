@@ -659,7 +659,7 @@ const TX={
  wo_cmp_sum:['bulan · total','months · total'], wo_best:['Persentase Done tertinggi','Highest Done rate'],
  wo_resched:['Jadwal Ulang (Pending)','Rescheduled (Pending)'], wo_detail:['Detail Work Order','Work Order Details'],
  wo_search:['Cari WO, customer, teknisi...','Search WO, customer, technician...'],
- wo_h:[['No','Tanggal','Reference Code','Subscriber','District','Teknisi','Status','Keterangan'],['No','Date','Reference Code','Subscriber','District','Technician','Status','Notes']],
+ wo_h:[['No','Tanggal','Reference Code','Subscriber','Alamat','Teknisi','Status','Keterangan'],['No','Date','Reference Code','Subscriber','Address','Technician','Status','Notes']],
  wo_hc:[['Bulan','Total','Done','Done %','Pending','Pending %','Cancel','Cancel %','Lainnya','Selisih Total'],['Month','Total','Done','Done %','Pending','Pending %','Cancel','Cancel %','Other','Change in Total']],
  wo_hr:[['Reference Code','Subscriber','Teknisi','Jadwal Ulang','Sisa'],['Reference Code','Subscriber','Technician','Reschedule','Remaining']],
  wo_overdue:['Lewat jadwal','Overdue'], wo_today:['Hari ini','Today'],
@@ -699,7 +699,7 @@ const TX={
  pend_title:['PENDING YANG DIJADWALKAN ULANG','PENDING RESCHEDULED'],
  pend_none_hari:['Tidak ada pending yang dijadwalkan ulang untuk hari ini.','No pending rescheduled for today.'],
  pend_none_besok:['Tidak ada pending yang dijadwalkan ulang untuk besok.','No pending rescheduled for tomorrow.'],
- pend_h:[['Reference Code','Subscriber','District','Teknisi','Status','Keterangan'],['Reference Code','Subscriber','District','Technician','Status','Notes']],
+ pend_h:[['Reference Code','Subscriber','Alamat','Teknisi','Status','Keterangan'],['Reference Code','Subscriber','Address','Technician','Status','Notes']],
  pend_wo:['WO','WOs'], pend_ret:['jadwal ulang','reschedule'],
  hari_lbl:['Hari ini','Today'], besok_lbl:['Besok','Tomorrow'],
  src:['Sumber Data','Data Source'], src_s:['Sheet Depok · baris Install Scheduled','Depok sheet · Install Scheduled row'],
@@ -1068,7 +1068,7 @@ function wfSet(t){S.wf=t;S.q='';draw();const e=$('wdet');if(e){e.classList.add('
 function woTab(){const q=S.q.toLowerCase();const f=(S.cache||[]).filter(r=>!q||JSON.stringify(r).toLowerCase().includes(q));
  const C={DONE:'ok',PENDING:'wr',CANCEL:'er',LAIN:'in',BELUM:'in'};
  $('wt').innerHTML=tbl(T('wo_h'),
-  f.map((r,i)=>[i+1,r.tgl,r.wo,r.cust,r.dist,r.tek,pill(stLabel(r.s),C[r.s]),{h:`<span class="wrapc">${E(r.ket)}</span>`}]),'auto')}
+  f.map((r,i)=>[i+1,r.tgl,r.wo,r.cust,{h:`<span class="wrapc">${E(r.alamat||'-')}</span>`},r.tek,pill(stLabel(r.s),C[r.s]),{h:`<span class="wrapc">${E(r.ket)}</span>`}]),'auto')}
 
 /* ---------- KPI ---------- */
 R.kpi=function(d){if(d.err){$('out').innerHTML=`<div class="err">${E(d.err)}</div>`;return}const ks=Object.keys(d.months||{});if(!ks.length){$('out').innerHTML=empty();return}
@@ -1244,7 +1244,7 @@ function snapDay(off,tm,cur,W){
 }
 function pendPanel(bi,label,rows){
  const list=rows||bi.pend;
- const tr=list.map(r=>[r.wo,r.cust,r.dist,r.tek,r.done?pill(T('terjadwal'),'ok'):pill(T('st_pending'),'wr'),
+ const tr=list.map(r=>[r.wo,r.cust,{h:`<span class="wrapc">${E(r.alamat||'-')}</span>`},r.tek,r.done?pill(T('terjadwal'),'ok'):pill(T('st_pending'),'wr'),
    {h:`<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:260px"><span class="wrapc">${E(r.ket||r.rem||'')}</span>${r.done?`<span class="glass-ok">${T('sudah_jadwal')}</span>`:''}</div>`}]);
  return `<div class="panel"><div class="sec-t"><h3>${T('pend_title')} · ${label}</h3><small>${list.length} ${T('pend_wo')} · ${T('pend_ret')} ${fmtLong(bi.tm)}</small></div>
   ${tbl(T('pend_h'),tr,'auto')}</div>`}
