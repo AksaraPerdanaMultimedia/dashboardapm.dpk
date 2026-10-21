@@ -730,7 +730,7 @@ const R={};
 // Setiap kunci: [Bahasa Indonesia, English]
 const TX={
  dashboard:['OVERVIEW','OVERVIEW'], menu:['MENU','MENU'], back:['Kembali','Back'], dispatch:['Dispatch Now','Dispatch Now'],
- lbl_absensi:['ABSENSI','ATTENDANCE'], lbl_kpi:['KPI','KPI'], lbl_wo:['WO APM','WO APM'], lbl_barang:['WAREHOUSE','WAREHOUSE'], lbl_jadwal:['JADWAL INSTALL','INSTALL SCHEDULE'], lbl_slip:['SLIP GAJI','PAYSLIP'], lbl_fieldsa:['FIELDSA','FIELDSA'], map_kec:['Kecamatan','District'], abs_reset:['Reset','Reset'], odp_red:['ODP Redaman Tinggi','High ODP Attenuation'], odp_loss:['ODP Loss','ODP Loss'], lbl_invoice:['SUBMIT INVOICE','SUBMIT INVOICE'], inv_card_sudah:['SUDAH SUBMIT INVOICE','SUBMITTED INVOICE'], inv_sub_sudah:['WO yang sudah Submit Invoice','WOs with submitted invoice'], inv_card_belum:['BELUM SUBMIT INVOICE','NOT SUBMITTED INVOICE'], inv_sub_belum:['WO kolom Submit Invoice kosong','WOs with blank invoice column'], inv_belum_txt:['Belum Submit Invoice','Not submitted yet'],
+ lbl_absensi:['ABSENSI','ATTENDANCE'], lbl_kpi:['KPI','KPI'], lbl_wo:['WO APM','WO APM'], lbl_barang:['WAREHOUSE','WAREHOUSE'], lbl_jadwal:['JADWAL INSTALL','INSTALL SCHEDULE'], lbl_slip:['SLIP GAJI','PAYSLIP'], lbl_fieldsa:['FIELDSA','FIELDSA'], lbl_sisabar:['SISABAR','SISABAR'], map_kec:['Kecamatan','District'], abs_reset:['Reset','Reset'], odp_red:['ODP Redaman Tinggi','High ODP Attenuation'], odp_loss:['ODP Loss','ODP Loss'], lbl_invoice:['SUBMIT INVOICE','SUBMIT INVOICE'], inv_card_sudah:['SUDAH SUBMIT INVOICE','SUBMITTED INVOICE'], inv_sub_sudah:['WO yang sudah Submit Invoice','WOs with submitted invoice'], inv_card_belum:['BELUM SUBMIT INVOICE','NOT SUBMITTED INVOICE'], inv_sub_belum:['WO kolom Submit Invoice kosong','WOs with blank invoice column'], inv_belum_txt:['Belum Submit Invoice','Not submitted yet'],
  loading:['Memuat data...','Loading data...'], nodata:['Belum ada data','No data yet'], notable:['Tidak ada data','No data'],
  updated:['Diperbarui','Updated'], autoref:['otomatis setiap 1 menit','auto-refresh every minute'],
  connfail:['Gagal terhubung ke Apps Script. Pastikan URL benar dan deploy: Execute as Me, akses Anyone.','Cannot reach Apps Script. Check the URL and deployment: Execute as Me, access Anyone.'],
@@ -908,12 +908,13 @@ function drawMap(rows){
  if(grp.getLayers().length)map.fitBounds(grp.getBounds(),{padding:[30,30],maxZoom:13});
 }
 /* ---------- navigasi & kerangka ---------- */
-const NC={fieldsa:['#f97316','#b91c1c','#fff8e8'],slip:['#0ea5e9','#2563eb','#fff8e8'],invoice:['#e11d74','#9d174d','#fff8e8'],dashboard:['#2c7b82','#1d4f55','#fff8e8'],absensi:['#d6262b','#8e1a1c','#fff8e8'],kpi:['#2f8f5b','#14532d','#fff8e8'],wo:['#f2b843','#e8772e','#2a1a14'],barang:['#7c3aed','#4c1d95','#fff8e8'],jadwal:['#0ea5e9','#1d4ed8','#fff8e8']};
+const NC={sisabar:['#7c3aed','#4c1d95','#fff8e8'],fieldsa:['#f97316','#b91c1c','#fff8e8'],slip:['#0ea5e9','#2563eb','#fff8e8'],invoice:['#e11d74','#9d174d','#fff8e8'],dashboard:['#2c7b82','#1d4f55','#fff8e8'],absensi:['#d6262b','#8e1a1c','#fff8e8'],kpi:['#2f8f5b','#14532d','#fff8e8'],wo:['#f2b843','#e8772e','#2a1a14'],barang:['#7c3aed','#4c1d95','#fff8e8'],jadwal:['#0ea5e9','#1d4ed8','#fff8e8']};
 const ncSt=k=>{const c=NC[k]||['#5b8cff','#8b5cf6','#fff'];return `--nc:${c[0]};--nc2:${c[1]};--nt:${c[2]}`};
 function buildNav(){
  $('nav').innerHTML=`<a id="n_dashboard" style="${ncSt('dashboard')}" onclick="go('dashboard')">${T('dashboard')}</a>`
   +`<div class="grp" onclick="toggleGrp()"><span>${T('menu')}</span><span id="arr" class="arr">${S.grpOpen?'▾':'▸'}</span></div>`
-  +`<div id="grp" class="sub ${S.grpOpen?'':'hide'}">${(S.menus||[]).filter(m=>m!=='slip').map(m=>`<a id="n_${m}" style="${ncSt(m)}" onclick="go('${m}')">${T('lbl_'+m)}</a>`).join('')}`
+  +`<div id="grp" class="sub ${S.grpOpen?'':'hide'}">${(S.menus||[]).filter(m=>m!=='slip'&&m!=='barang').map(m=>`<a id="n_${m}" style="${ncSt(m)}" onclick="go('${m}')">${T('lbl_'+m)}</a>`).join('')}`
+   +`<a id="n_sisabar" href="https://aksaraperdanamultimedia.github.io/SISABAR/" target="_blank" rel="noopener" style="${ncSt('sisabar')}">${T('lbl_sisabar')}<span class="xo-badge">&#8599;</span></a>`
    +`<a id="n_slipgaji" href="https://aksaraperdanamultimedia.github.io/SLIPGAJI/" target="_blank" rel="noopener" style="${ncSt('slip')}">${T('lbl_slip')}<span class="xo-badge">&#8599;</span></a>`
    +`<a id="n_fieldsa" href="https://fieldsa.fiberstar.co.id/#/tasklist/dispatchingboard" target="_blank" rel="noopener" style="${ncSt('fieldsa')}">${T('lbl_fieldsa')}<span class="xo-badge">&#8599;</span></a>`;
  markNav();
@@ -1412,12 +1413,6 @@ function drawOverview(){
   ${card(T('st_done'),pc('DONE'),c('DONE')+' WO','var(--ok)',"go('wo')")}
   ${card(T('st_pending'),c('PENDING'),pc('PENDING')+' '+T('wo_pctof'),'var(--wr)',"go('wo')")}
   ${card(T('st_cancel'),c('CANCEL'),pc('CANCEL')+' '+T('wo_pctof'),'var(--er)',"go('wo')")}
- </div>
- <div class="ov-h"><h3>${T('ov_wh')}</h3></div>
- <div class="ov12 g3">
-  ${card(T('wh_req'),low,T('wh_lowrule'),'var(--wr)',"go('barang')")}
-  ${card(T('wh_rusak'),rusakT,T('wh_units'),'var(--er)',"go('barang')")}
-  ${card(T('wh_total'),namesT,T('wh_jenis'),'var(--ac)',"go('barang')")}
  </div>
  <div class="ov-h"><h3>${T('ov_abs')}</h3></div>
  <div class="ov12 g3">
