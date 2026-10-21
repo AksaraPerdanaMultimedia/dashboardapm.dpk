@@ -685,6 +685,17 @@ nav>a#n_dashboard{min-height:38px!important}
 .sideclk .clock{display:flex;justify-content:center;align-items:center;gap:10px;font-family:'Righteous',cursive;font-size:12px;letter-spacing:.03em;color:#fff8e8;text-shadow:2px 2px 0 var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums}
 .sideclk .cd{display:inline-block;min-width:9.5em;text-align:right}
 .sideclk .ct{display:inline-block;min-width:7.6em;text-align:left}
+/* ===== Jam: kontras jelas dan huruf lebih besar ===== */
+.sideclk{background:#2a1a14;border:3px solid #f59e0b;box-shadow:4px 4px 0 #f59e0b}
+.sideclk .clock{color:#fcd34d;text-shadow:none;font-size:15px;font-weight:700}
+/* ===== Menu di bawah Overview: jeda seirama untuk semua item (termasuk SLIP GAJI & FIELDSA) ===== */
+@media(min-width:981px){
+ .sub:not(.hide)>a:nth-child(8){animation-delay:.49s}
+ .sub:not(.hide)>a:nth-child(9){animation-delay:.56s}
+ .sub:not(.hide)>a:nth-child(10){animation-delay:.63s}
+}
+.sub>a{min-height:40px!important;height:auto}
+.sub>a .xo-badge{width:22px;height:22px;flex:0 0 22px;font-size:12px;margin-left:auto}
 </style>
 </head>
 <body>
