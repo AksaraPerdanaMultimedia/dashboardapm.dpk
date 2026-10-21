@@ -668,6 +668,15 @@ nav>a#n_dashboard{min-height:38px!important}
 @media(max-width:980px){.sub>a .xo-badge{width:22px;height:22px;font-size:12px}}
 .sub>a{text-decoration:none!important}
 .sub>a:hover{text-decoration:none!important}
+/* ===== Jam di sidebar (laptop) ===== */
+.sideclk{margin-top:16px;padding:10px 12px;border:3px solid var(--ink);border-radius:14px;background:var(--cream2);box-shadow:3px 3px 0 var(--ink);text-align:center}
+.sideclk .clock{font-family:'Righteous',cursive;font-size:12px;letter-spacing:.03em;color:var(--ink);white-space:normal;display:block}
+@media(max-width:980px){.sideclk{display:none!important}}
+/* ===== Peta: dropdown rata kiri di bawah judul ===== */
+.kecwrap{text-align:left;margin:0 0 12px}
+.kecsel{margin:0;max-width:260px}
+/* ===== Reset log absensi ===== */
+.absreset{margin:0 0 0 6px}
 </style>
 </head>
 <body>
@@ -675,9 +684,9 @@ nav>a#n_dashboard{min-height:38px!important}
 <aside>
  <div class="brand"><b>SO DEPOK</b><span>PT Aksara Perdana Multimedia</span></div>
  <nav id="nav"></nav>
-</aside>
+<div class="sideclk"><span class="clock" id="clk"></span></div></aside>
 <main>
- <div class="topbar"><div class="lng" role="group" aria-label="Language"><button id="lid" onclick="setLang('id')">ID</button><button id="len" onclick="setLang('en')">EN</button></div><label class="tg" title="Mode siang / malam"><input type="checkbox" id="thm" aria-label="Mode siang" onchange="setTheme(this.checked?'light':'dark')"><span class="tr"></span></label><span class="clock" id="clk"></span></div>
+ <div class="topbar"><div class="lng" role="group" aria-label="Language"><button id="lid" onclick="setLang('id')">ID</button><button id="len" onclick="setLang('en')">EN</button></div><label class="tg" title="Mode siang / malam"><input type="checkbox" id="thm" aria-label="Mode siang" onchange="setTheme(this.checked?'light':'dark')"><span class="tr"></span></label></div>
  <div class="head"><div class="hl"><h1 id="ttl"></h1><p id="upd"></p></div><div class="ctl"><div id="ctl" class="ctl"></div></div></div>
  <div id="out"></div>
 </main>
@@ -699,7 +708,7 @@ const R={};
 // Setiap kunci: [Bahasa Indonesia, English]
 const TX={
  dashboard:['OVERVIEW','OVERVIEW'], menu:['MENU','MENU'], back:['Kembali','Back'], dispatch:['Dispatch Now','Dispatch Now'],
- lbl_absensi:['ABSENSI','ATTENDANCE'], lbl_kpi:['KPI','KPI'], lbl_wo:['WO APM','WO APM'], lbl_barang:['WAREHOUSE','WAREHOUSE'], lbl_jadwal:['JADWAL INSTALL','INSTALL SCHEDULE'], lbl_slip:['SLIP GAJI','PAYSLIP'], lbl_fieldsa:['FIELDSA','FIELDSA'], odp_red:['ODP Redaman Tinggi','High ODP Attenuation'], odp_loss:['ODP Loss','ODP Loss'], lbl_invoice:['SUBMIT INVOICE','SUBMIT INVOICE'], inv_card_sudah:['SUDAH SUBMIT INVOICE','SUBMITTED INVOICE'], inv_sub_sudah:['WO yang sudah Submit Invoice','WOs with submitted invoice'], inv_card_belum:['BELUM SUBMIT INVOICE','NOT SUBMITTED INVOICE'], inv_sub_belum:['WO kolom Submit Invoice kosong','WOs with blank invoice column'], inv_belum_txt:['Belum Submit Invoice','Not submitted yet'],
+ lbl_absensi:['ABSENSI','ATTENDANCE'], lbl_kpi:['KPI','KPI'], lbl_wo:['WO APM','WO APM'], lbl_barang:['WAREHOUSE','WAREHOUSE'], lbl_jadwal:['JADWAL INSTALL','INSTALL SCHEDULE'], lbl_slip:['SLIP GAJI','PAYSLIP'], lbl_fieldsa:['FIELDSA','FIELDSA'], map_kec:['Kecamatan','District'], abs_reset:['Reset','Reset'], odp_red:['ODP Redaman Tinggi','High ODP Attenuation'], odp_loss:['ODP Loss','ODP Loss'], lbl_invoice:['SUBMIT INVOICE','SUBMIT INVOICE'], inv_card_sudah:['SUDAH SUBMIT INVOICE','SUBMITTED INVOICE'], inv_sub_sudah:['WO yang sudah Submit Invoice','WOs with submitted invoice'], inv_card_belum:['BELUM SUBMIT INVOICE','NOT SUBMITTED INVOICE'], inv_sub_belum:['WO kolom Submit Invoice kosong','WOs with blank invoice column'], inv_belum_txt:['Belum Submit Invoice','Not submitted yet'],
  loading:['Memuat data...','Loading data...'], nodata:['Belum ada data','No data yet'], notable:['Tidak ada data','No data'],
  updated:['Diperbarui','Updated'], autoref:['otomatis setiap 1 menit','auto-refresh every minute'],
  connfail:['Gagal terhubung ke Apps Script. Pastikan URL benar dan deploy: Execute as Me, akses Anyone.','Cannot reach Apps Script. Check the URL and deployment: Execute as Me, access Anyone.'],
@@ -852,30 +861,29 @@ const KEC={'BEJI':[-6.3850,106.8260],'BOJONGSARI':[-6.4230,106.7480],'CILODONG':
 const DEPOK_C=[-6.3990,106.8200];
 let MAP=null;
 function normKec(x){return String(x||'').trim().toUpperCase().replace(/\s+/g,' ').replace('SUKMA JAYA','SUKMAJAYA')}
+function kecTitle(k){return k.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase())}
 function drawMap(rows){
  const el=document.getElementById('wmap');
  if(!el||!window.L)return;
  if(MAP){MAP.remove();MAP=null}
  const map=L.map(el,{zoomControl:true,scrollWheelZoom:true,preferCanvas:true}).setView(DEPOK_C,11);
- const svgR=L.svg({padding:.5});
  MAP=map;
+ const svgR=L.svg({padding:.5});
  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'&copy; OpenStreetMap'}).addTo(map);
- // satu titik per alamat (WO Done), angka = jumlah WO di alamat itu
- const g=new Map();
- rows.filter(r=>r.s==='DONE'&&r.lat!=null&&r.lng!=null&&(!S.mapKec||S.mapKec==='ALL'||kecOf(+r.lat,+r.lng)===S.mapKec)).forEach(r=>{
-   const k=(+r.lat).toFixed(5)+','+(+r.lng).toFixed(5);
-   const e=g.get(k);
-   g.set(k,{lat:+r.lat,lng:+r.lng,addr:e?e.addr:String(r.alamat||''),n:(e?e.n:0)+1});
- });
+ // satu titik per kecamatan (jumlah WO Done)
+ const cnt={};
+ rows.filter(r=>r.s==='DONE'&&r.lat!=null&&r.lng!=null).forEach(r=>{const k=kecOf(+r.lat,+r.lng);cnt[k]=(cnt[k]||0)+1});
+ const one=S.mapKec&&S.mapKec!=='ALL';
  const grp=L.featureGroup();
- [...g.values()].forEach(v=>{
-   if(S.mapKec&&S.mapKec!=='ALL')[0,1,2].forEach(i=>L.circleMarker([v.lat,v.lng],{renderer:svgR,radius:5,color:'#dc2626',weight:2,fill:false,interactive:false,className:'quake q'+i}).addTo(grp));
-   L.circleMarker([v.lat,v.lng],{radius:5,color:'#2a1a14',weight:1.5,fillColor:'#f59e0b',fillOpacity:.92})
-     .bindTooltip(E(v.addr)+' · '+v.n+' WO Done',{direction:'top'})
+ Object.keys(cnt).filter(k=>!one||k===S.mapKec).forEach(k=>{
+   const c=KEC[k];
+   if(one)[0,1,2].forEach(i=>L.circleMarker(c,{renderer:svgR,radius:9,color:'#dc2626',weight:2,fill:false,interactive:false,className:'quake q'+i}).addTo(grp));
+   L.circleMarker(c,{radius:8,color:'#2a1a14',weight:2,fillColor:'#f59e0b',fillOpacity:.95})
+     .bindTooltip(kecTitle(k)+' · '+cnt[k]+' WO Done',{direction:'top'})
      .addTo(grp);
  });
  grp.addTo(map);
- if(g.size)map.fitBounds(grp.getBounds(),{padding:[20,20],maxZoom:14});
+ if(grp.getLayers().length)map.fitBounds(grp.getBounds(),{padding:[30,30],maxZoom:13});
 }
 /* ---------- navigasi & kerangka ---------- */
 const NC={fieldsa:['#f97316','#b91c1c','#fff8e8'],slip:['#0ea5e9','#2563eb','#fff8e8'],invoice:['#e11d74','#9d174d','#fff8e8'],dashboard:['#2c7b82','#1d4f55','#fff8e8'],absensi:['#d6262b','#8e1a1c','#fff8e8'],kpi:['#2f8f5b','#14532d','#fff8e8'],wo:['#f2b843','#e8772e','#2a1a14'],barang:['#7c3aed','#4c1d95','#fff8e8'],jadwal:['#0ea5e9','#1d4ed8','#fff8e8']};
@@ -1106,7 +1114,7 @@ R.wo=function(rows){
  </div>
  <div class="grid two">
   ${lineP}
-  <div class="panel only-laptop"><div class="sec-t"><h3>User By Location</h3>${mapKecSelect(all)}<small>${all.filter(r=>r.s==='DONE').length} WO Done</small></div><div id="wmap" class="map-box"></div><div class="legend"><span><i style="background:#f59e0b"></i>Titik = alamat WO Done</span><span>Tooltip: alamat · jumlah WO</span></div></div><div class="panel only-hp"><div class="sec-t"><h3>${T('wo_status')}</h3><small>${T('wo_total')}: ${n}</small></div>
+  <div class="panel only-laptop"><div class="sec-t"><h3>User By Location</h3><small>${T('map_kec')}</small></div><div class="kecwrap">${mapKecSelect(all)}</div><div id="wmap" class="map-box"></div><div class="legend"><span><i style="background:#f59e0b"></i>Titik = alamat WO Done</span><span>Tooltip: alamat · jumlah WO</span></div></div><div class="panel only-hp"><div class="sec-t"><h3>${T('wo_status')}</h3><small>${T('wo_total')}: ${n}</small></div>
    <div style="display:grid;place-items:center;padding:6px 0"><div style="width:180px;height:180px;border-radius:50%;background:${n?`conic-gradient(#22c55e 0 ${a1}%,#f59e0b ${a1}% ${a2}%,#ef4444 ${a2}% 100%)`:'var(--line)'};display:grid;place-items:center"><div style="width:120px;height:120px;border-radius:50%;background:var(--panel);display:grid;place-items:center;text-align:center"><div><div class="big">${n}</div><small style="color:var(--mu)">Work Order</small></div></div></div></div>
    <div class="legend"><span><i style="background:#22c55e"></i>${T('st_done')}</span><span><i style="background:#f59e0b"></i>${T('st_pending')}</span><span><i style="background:#ef4444"></i>${T('st_cancel')}</span></div></div>
  </div>
@@ -1269,7 +1277,7 @@ R.absensi=function(d){const H=d.headers,f=re=>H.find(h=>re.test(h));
   <div class="panel"><div class="sec-t"><h3>${T('abs_top')}</h3><small>${T('top5')}</small></div>
    ${top.length?`<ul class="rank">${top.map(([n,v])=>`<li><div class="who"><div class="avatar">${E(ini(n))}</div><div><b>${E(n)}</b><div style="color:var(--mu);font-size:12px">${fill(T('abs_hadirhari'),{n:v.h})}</div></div></div><span class="pill p-wr">${v.l}x</span></li>`).join('')}</ul>`:`<div style="color:var(--mu)">${T('abs_none')}</div>`}</div>
  </div>
- <div class="panel"><div class="sec-t"><h3>${T('abs_log')}</h3><input type="date" class="absdate" min="${minD}" max="${maxD}" value="${selD}" onchange="S.absDay=this.value;draw()"><small>${fill(T('abs_logsub'),{n:logRows.length})}</small></div>
+ <div class="panel"><div class="sec-t"><h3>${T('abs_log')}</h3><input type="date" class="absdate" min="${minD}" max="${maxD}" value="${selD}" onchange="S.absDay=this.value;draw()"><button class="diagbtn absreset" onclick="S.absDay='';draw()">${T('abs_reset')}</button><small>${fill(T('abs_logsub'),{n:logRows.length})}</small></div>
   ${logRows.length?tbl(logH,logRows.slice(0,400).map(r=>logH.map(h=>r[h]))):`<div style="padding:20px;text-align:center;color:var(--mu)">${T('abs_nolog')}</div>`}</div>`};
 
 /* ---------- JADWAL INSTALL ---------- */
