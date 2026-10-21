@@ -677,6 +677,14 @@ nav>a#n_dashboard{min-height:38px!important}
 .kecsel{margin:0;max-width:260px}
 /* ===== Reset log absensi ===== */
 .absreset{margin:0 0 0 6px}
+/* ===== Angka jumlah di bawah titik kecamatan ===== */
+.kecnum{font-family:'Righteous',cursive;font-size:12px;background:var(--cream2)!important;color:var(--ink)!important;border:2px solid var(--ink)!important;border-radius:8px;padding:1px 7px;box-shadow:2px 2px 0 var(--ink)}
+.kecnum:before{display:none}
+/* ===== Jam: berwarna, lebar tetap agar layar tidak bergeser ===== */
+.sideclk{margin-top:16px;width:100%;min-height:52px;display:flex;align-items:center;justify-content:center;padding:8px 10px;border:3px solid var(--ink);border-radius:14px;background:linear-gradient(90deg,#f59e0b,#ea580c 55%,#db2777);box-shadow:4px 4px 0 var(--ink);overflow:hidden}
+.sideclk .clock{display:flex;justify-content:center;align-items:center;gap:10px;font-family:'Righteous',cursive;font-size:12px;letter-spacing:.03em;color:#fff8e8;text-shadow:2px 2px 0 var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums}
+.sideclk .cd{display:inline-block;min-width:9.5em;text-align:right}
+.sideclk .ct{display:inline-block;min-width:7.6em;text-align:left}
 </style>
 </head>
 <body>
@@ -877,9 +885,9 @@ function drawMap(rows){
  const grp=L.featureGroup();
  Object.keys(cnt).filter(k=>!one||k===S.mapKec).forEach(k=>{
    const c=KEC[k];
-   if(one)[0,1,2].forEach(i=>L.circleMarker(c,{renderer:svgR,radius:9,color:'#dc2626',weight:2,fill:false,interactive:false,className:'quake q'+i}).addTo(grp));
+   [0,1,2].forEach(i=>L.circleMarker(c,{renderer:svgR,radius:9,color:'#dc2626',weight:2,fill:false,interactive:false,className:'quake q'+i}).addTo(grp));
    L.circleMarker(c,{radius:8,color:'#2a1a14',weight:2,fillColor:'#f59e0b',fillOpacity:.95})
-     .bindTooltip(kecTitle(k)+' · '+cnt[k]+' WO Done',{direction:'top'})
+     .bindTooltip(String(cnt[k]),{permanent:true,direction:'bottom',offset:[0,12],className:'kecnum'})
      .addTo(grp);
  });
  grp.addTo(map);
@@ -1417,7 +1425,7 @@ function slipView(d){setCtl('');
  ${S.slipRow?`<div class="panel" style="max-width:720px"><h3 style="margin-top:0">${E(S.slipName)}</h3><div class="kv">${Object.entries(S.slipRow).filter(x=>x[1]!=='').map(([k,v])=>`<div><div style="color:var(--mu);font-size:11px;text-transform:uppercase">${E(k)}</div><b>${E(v)}</b></div>`).join('')}</div></div>`:''}`}
 
 /* ---------- jam & refresh ---------- */
-const tick=()=>{$('clk').textContent=new Date().toLocaleString(locale(),{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',second:'2-digit'})};
+const tick=()=>{const d=new Date();$('clk').innerHTML=`<span class="cd">${d.toLocaleDateString(locale(),{weekday:'short',day:'numeric',month:'short'})}</span><span class="ct">${d.toLocaleTimeString(locale(),{hour:'2-digit',minute:'2-digit',second:'2-digit'})}</span>`};
 tick();setInterval(tick,1000);
 setInterval(()=>{if(!S.menus)return;if(S.menu==='dashboard'||S.menu==='jadwal')loadAll();else if(S.menu&&S.menu!=='slip')load()},60000);
 window.matchMedia('(max-width:980px)').addEventListener('change',e=>{LANG=e.matches?'id':(localStorage.apmLang||'id');buildNav();chrome();if(S.menu)draw()});
