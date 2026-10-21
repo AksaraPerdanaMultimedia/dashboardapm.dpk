@@ -650,6 +650,18 @@ nav>a#n_dashboard{min-height:38px!important}
  #out.enter>*:nth-child(3){animation-delay:.24s}
  #out.enter>*:nth-child(n+4){animation-delay:.36s}
 }
+/* ===== Pilihan kalender log absensi ===== */
+.absdate{margin-left:auto;margin-right:10px;font-family:'Righteous',cursive;font-size:12px;padding:5px 8px;border:2px solid var(--ink);border-radius:10px;background:var(--cream2);color:var(--ink);max-width:100%}
+/* ===== Submenu MENU: turun pelan dari atas (laptop) ===== */
+@media(min-width:981px){
+ .sub:not(.hide)>a{animation:dropSlow .9s cubic-bezier(.16,.84,.3,1) both}
+ .sub:not(.hide)>a:nth-child(2){animation-delay:.07s}
+ .sub:not(.hide)>a:nth-child(3){animation-delay:.14s}
+ .sub:not(.hide)>a:nth-child(4){animation-delay:.21s}
+ .sub:not(.hide)>a:nth-child(5){animation-delay:.28s}
+ .sub:not(.hide)>a:nth-child(6){animation-delay:.35s}
+ .sub:not(.hide)>a:nth-child(7){animation-delay:.42s}
+}
 </style>
 </head>
 <body>
@@ -729,7 +741,7 @@ const TX={
  abs_rekap:['Rekap Hadir per Karyawan','Attendance per Employee'], abs_top:['Sering Terlambat','Frequently Late'], top5:['Top 5','Top 5'],
  abs_hadirhari:['Hadir {n} hari','Present {n} days'], abs_none:['Tidak ada keterlambatan tercatat.','No late arrivals recorded.'],
  abs_h:[['Nama','Total Hadir','Terlambat'],['Name','Total Present','Late']],
- abs_log:['Log Absensi','Attendance Log'], abs_logsub:['{n} catatan, terbaru di atas','{n} records, latest first'],
+ abs_log:['Log Absensi','Attendance Log'], abs_logsub:['{n} catatan, terbaru di atas','{n} records, latest first'], abs_nolog:['Belum ada catatan untuk tanggal ini','No records for this date'],
  abs_nocol:['Kolom tanggal tidak ditemukan di sheet absensi','Date column not found in the attendance sheet'],
  abs_nolate:['Kolom keterlambatan tidak ditemukan.','Late column not found.'],
  orang:['orang','people'],
@@ -1233,6 +1245,10 @@ R.absensi=function(d){const H=d.headers,f=re=>H.find(h=>re.test(h));
  const top=list.filter(x=>x[1].l>0).slice(0,5);
  const ini=n=>n.split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
  const logH=H.filter(h=>!cl.includes(h));
+ const minD=isoJS(a),maxD=isoJS(b),today0=isoJS(new Date());
+ let selD=S.absDay;
+ if(!selD||selD<minD||selD>maxD)selD=(today0>=minD&&today0<=maxD)?today0:maxD;
+ const logRows=dated.filter(r=>isoJS(r._d)===selD).sort((x,y)=>y._d-x._d);
  $('out').innerHTML=`
  <div class="grid kpis">
   ${card(T('abs_karyawan'),list.length,T('abs_tercatat'),'var(--ac2)')}
@@ -1244,8 +1260,8 @@ R.absensi=function(d){const H=d.headers,f=re=>H.find(h=>re.test(h));
   <div class="panel"><div class="sec-t"><h3>${T('abs_top')}</h3><small>${T('top5')}</small></div>
    ${top.length?`<ul class="rank">${top.map(([n,v])=>`<li><div class="who"><div class="avatar">${E(ini(n))}</div><div><b>${E(n)}</b><div style="color:var(--mu);font-size:12px">${fill(T('abs_hadirhari'),{n:v.h})}</div></div></div><span class="pill p-wr">${v.l}x</span></li>`).join('')}</ul>`:`<div style="color:var(--mu)">${T('abs_none')}</div>`}</div>
  </div>
- <div class="panel"><div class="sec-t"><h3>${T('abs_log')}</h3><small>${fill(T('abs_logsub'),{n:rows.length})}</small></div>
-  ${tbl(logH,rows.slice(0,400).map(r=>logH.map(h=>r[h])))}</div>`};
+ <div class="panel"><div class="sec-t"><h3>${T('abs_log')}</h3><input type="date" class="absdate" min="${minD}" max="${maxD}" value="${selD}" onchange="S.absDay=this.value;draw()"><small>${fill(T('abs_logsub'),{n:logRows.length})}</small></div>
+  ${logRows.length?tbl(logH,logRows.slice(0,400).map(r=>logH.map(h=>r[h]))):`<div style="padding:20px;text-align:center;color:var(--mu)">${T('abs_nolog')}</div>`}</div>`};
 
 /* ---------- JADWAL INSTALL ---------- */
 function dayInfo(off){
