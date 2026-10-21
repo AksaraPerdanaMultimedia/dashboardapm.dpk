@@ -635,6 +635,21 @@ nav a.ext:hover .xo{transform:translate(2px,-2px)}
  .big{font-size:24px}
  .tw th,.tw td{padding:6px 8px;font-size:11px}
 }
+/* ===== Menu lebih ringkas ===== */
+nav>a,.grp,.sub>a{min-height:38px!important;padding:7px 12px!important;font-size:12px!important;letter-spacing:.05em!important;border-radius:12px!important;box-shadow:3px 3px 0 var(--ink)!important;margin-bottom:6px!important}
+nav>a#n_dashboard{min-height:38px!important}
+.grp{margin:0 0 6px!important;padding:7px 12px!important;font-size:12px!important}
+.sub{gap:6px!important;padding:4px 0 0!important}
+.sub>a{margin:0!important}
+.sub>a .xo{font-size:12px}
+/* ===== Menu dipilih: muncul turun pelan ke bawah (laptop) ===== */
+@keyframes dropSlow{from{opacity:0;transform:translateY(-38px)}to{opacity:1;transform:none}}
+@media(min-width:981px){
+ #out.enter>*{animation:dropSlow 1.1s cubic-bezier(.16,.84,.3,1) both}
+ #out.enter>*:nth-child(2){animation-delay:.12s}
+ #out.enter>*:nth-child(3){animation-delay:.24s}
+ #out.enter>*:nth-child(n+4){animation-delay:.36s}
+}
 </style>
 </head>
 <body>
@@ -650,14 +665,7 @@ nav a.ext:hover .xo{transform:translate(2px,-2px)}
 </main>
 </div>
 
-<button id="mus" class="musbtn" onclick="toggleMusic()" aria-label="Musik"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11.4" fill="#0b0b0b" stroke="#2a2a2a" stroke-width=".8"/><circle cx="12" cy="12" r="9" fill="none" stroke="#262626" stroke-width=".5"/><circle cx="12" cy="12" r="7.2" fill="none" stroke="#262626" stroke-width=".5"/><circle cx="12" cy="12" r="5.2" fill="none" stroke="#262626" stroke-width=".5"/><circle cx="12" cy="12" r="4" fill="#dc2626"/><circle cx="12" cy="12" r="1.1" fill="#fff8e8"/><path d="M4.2 8.2a9.4 9.4 0 0 1 5.4-3.6" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="1.1" stroke-linecap="round"/></svg></button>
-<div id="musp" class="musp hide">
- <h4 id="musT">Musik</h4>
- <p id="musH"></p>
- <div id="musForm"><input id="spl" placeholder="Tempel link Spotify"><div class="musErr" id="musErr" hidden></div><div class="row"><button id="musSave" onclick="saveMusic()">Simpan</button></div></div>
- <iframe id="spf" hidden allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" title="Spotify"></iframe>
- <div class="row" id="musChgRow" hidden><button id="musSpin" onclick="setDisc(!MUS_PLAY)">Tandai diputar</button><button id="musChg" onclick="changeMusic()">Ganti link</button></div>
-</div>
+
 
 <script>
 const API='https://script.google.com/macros/s/AKfycbwGTrxswoj9yOREpCkXgTrWRSUHKTt3FkOfH-BRgS0nY1X3kN-wEo-k_xm7mlTlvq0LfA/exec';
@@ -852,19 +860,19 @@ function drawMap(rows){
  if(g.size)map.fitBounds(grp.getBounds(),{padding:[20,20],maxZoom:14});
 }
 /* ---------- navigasi & kerangka ---------- */
-const NC={invoice:['#e11d74','#9d174d','#fff8e8'],dashboard:['#2c7b82','#1d4f55','#fff8e8'],absensi:['#d6262b','#8e1a1c','#fff8e8'],kpi:['#2f8f5b','#14532d','#fff8e8'],wo:['#f2b843','#e8772e','#2a1a14'],barang:['#7c3aed','#4c1d95','#fff8e8'],jadwal:['#0ea5e9','#1d4ed8','#fff8e8']};
+const NC={slip:['#0ea5e9','#2563eb','#fff8e8'],invoice:['#e11d74','#9d174d','#fff8e8'],dashboard:['#2c7b82','#1d4f55','#fff8e8'],absensi:['#d6262b','#8e1a1c','#fff8e8'],kpi:['#2f8f5b','#14532d','#fff8e8'],wo:['#f2b843','#e8772e','#2a1a14'],barang:['#7c3aed','#4c1d95','#fff8e8'],jadwal:['#0ea5e9','#1d4ed8','#fff8e8']};
 const ncSt=k=>{const c=NC[k]||['#5b8cff','#8b5cf6','#fff'];return `--nc:${c[0]};--nc2:${c[1]};--nt:${c[2]}`};
 function buildNav(){
  $('nav').innerHTML=`<a id="n_dashboard" style="${ncSt('dashboard')}" onclick="go('dashboard')">${T('dashboard')}</a>`
   +`<div class="grp" onclick="toggleGrp()"><span>${T('menu')}</span><span id="arr" class="arr">${S.grpOpen?'▾':'▸'}</span></div>`
-  +`<div id="grp" class="sub ${S.grpOpen?'':'hide'}">${(S.menus||[]).map(m=>`<a id="n_${m}" style="${ncSt(m)}" onclick="go('${m}')">${T('lbl_'+m)}</a>`).join('')}`;
+  +`<div id="grp" class="sub ${S.grpOpen?'':'hide'}">${(S.menus||[]).filter(m=>m!=='slip').map(m=>`<a id="n_${m}" style="${ncSt(m)}" onclick="go('${m}')">${T('lbl_'+m)}</a>`).join('')}`
+   +`<a id="n_slipgaji" href="https://aksaraperdanamultimedia.github.io/SLIPGAJI/" target="_blank" rel="noopener" style="${ncSt('slip')}">${T('lbl_slip')} <span class="xo">&#8599;</span></a>`;
  markNav();
 }
 function markNav(){document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.id==='n_'+S.menu))}
 function toggleGrp(){S.grpOpen=!S.grpOpen;$('grp').classList.toggle('hide',!S.grpOpen);$('arr').textContent=S.grpOpen?'▾':'▸'}
 function updText(){return S.updAt?`${T('updated')} ${new Date(S.updAt).toLocaleString(locale(),{dateStyle:'medium',timeStyle:'short'})} · ${T('autoref')}`:T('loading')}
 function chrome(){
- musicLabels();
  document.documentElement.lang=LANG;
  $('ttl').textContent=S.menu==='dashboard'?T('dashboard'):(S.menu?T('lbl_'+S.menu):'');
  $('disp').hidden=S.menu!=='jadwal';$('dispT').textContent=T('dispatch');
@@ -904,7 +912,6 @@ function setDisc(on){
  $('musSpin').textContent=MUS_PLAY?'Hentikan putaran':'Tandai diputar';
 }
 // klik di dalam pemutar Spotify dianggap memutar lagu
-window.addEventListener('blur',()=>{setTimeout(()=>{if(document.activeElement&&document.activeElement.id==='spf')setDisc(true)},0)});
 function setLang(l){LANG=l;localStorage.apmLang=l;buildNav();chrome();if(S.menu)draw()}
 
 async function start(){
@@ -1381,7 +1388,6 @@ const tick=()=>{$('clk').textContent=new Date().toLocaleString(locale(),{weekday
 tick();setInterval(tick,1000);
 setInterval(()=>{if(!S.menus)return;if(S.menu==='dashboard'||S.menu==='jadwal')loadAll();else if(S.menu&&S.menu!=='slip')load()},60000);
 window.matchMedia('(max-width:980px)').addEventListener('change',e=>{LANG=e.matches?'id':(localStorage.apmLang||'id');buildNav();chrome();if(S.menu)draw()});
-musicLabels();musicInit();restoreMusic();
 start();
 </script>
 </body>
