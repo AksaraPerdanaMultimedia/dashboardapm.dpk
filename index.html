@@ -662,6 +662,14 @@ nav>a#n_dashboard{min-height:38px!important}
  .sub:not(.hide)>a:nth-child(6){animation-delay:.35s}
  .sub:not(.hide)>a:nth-child(7){animation-delay:.42s}
 }
+/* ===== Panah link eksternal (SLIP GAJI, FIELDSA) ===== */
+.sub>a .xo-badge{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;margin-left:auto;width:24px;height:24px;border-radius:50%;background:#fff8e8;color:var(--ink);border:2px solid var(--ink);box-shadow:2px 2px 0 var(--ink);font-size:13px;line-height:1;font-weight:700}
+.sub>a{display:flex;align-items:center;gap:8px}
+@media(min-width:981px){
+ .sub>a .xo-badge{animation:xoBob 1.6s ease-in-out infinite}
+}
+@keyframes xoBob{0%,100%{transform:translate(0,0)}50%{transform:translate(3px,-3px)}}
+@media(max-width:980px){.sub>a .xo-badge{width:22px;height:22px;font-size:12px}}
 </style>
 </head>
 <body>
@@ -672,7 +680,7 @@ nav>a#n_dashboard{min-height:38px!important}
 </aside>
 <main>
  <div class="topbar"><div class="lng" role="group" aria-label="Language"><button id="lid" onclick="setLang('id')">ID</button><button id="len" onclick="setLang('en')">EN</button></div><label class="tg" title="Mode siang / malam"><input type="checkbox" id="thm" aria-label="Mode siang" onchange="setTheme(this.checked?'light':'dark')"><span class="tr"></span></label><span class="clock" id="clk"></span></div>
- <div class="head"><div class="hl"><h1 id="ttl"></h1><p id="upd"></p></div><div class="ctl"><div id="ctl" class="ctl"></div><a id="disp" class="disp" href="https://fieldsa.fiberstar.co.id/#/tasklist/assigntome" target="_blank" rel="noopener" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M10 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg><span id="dispT">Dispatch Now</span></a></div></div>
+ <div class="head"><div class="hl"><h1 id="ttl"></h1><p id="upd"></p></div><div class="ctl"><div id="ctl" class="ctl"></div></div></div>
  <div id="out"></div>
 </main>
 </div>
@@ -693,7 +701,7 @@ const R={};
 // Setiap kunci: [Bahasa Indonesia, English]
 const TX={
  dashboard:['OVERVIEW','OVERVIEW'], menu:['MENU','MENU'], back:['Kembali','Back'], dispatch:['Dispatch Now','Dispatch Now'],
- lbl_absensi:['ABSENSI','ATTENDANCE'], lbl_kpi:['KPI','KPI'], lbl_wo:['WO APM','WO APM'], lbl_barang:['WAREHOUSE','WAREHOUSE'], lbl_jadwal:['JADWAL INSTALL','INSTALL SCHEDULE'], lbl_slip:['SLIP GAJI','PAYSLIP'], lbl_invoice:['SUBMIT INVOICE','SUBMIT INVOICE'], inv_card_sudah:['SUDAH SUBMIT INVOICE','SUBMITTED INVOICE'], inv_sub_sudah:['WO yang sudah Submit Invoice','WOs with submitted invoice'], inv_card_belum:['BELUM SUBMIT INVOICE','NOT SUBMITTED INVOICE'], inv_sub_belum:['WO kolom Submit Invoice kosong','WOs with blank invoice column'], inv_belum_txt:['Belum Submit Invoice','Not submitted yet'],
+ lbl_absensi:['ABSENSI','ATTENDANCE'], lbl_kpi:['KPI','KPI'], lbl_wo:['WO APM','WO APM'], lbl_barang:['WAREHOUSE','WAREHOUSE'], lbl_jadwal:['JADWAL INSTALL','INSTALL SCHEDULE'], lbl_slip:['SLIP GAJI','PAYSLIP'], lbl_fieldsa:['FIELDSA','FIELDSA'], lbl_invoice:['SUBMIT INVOICE','SUBMIT INVOICE'], inv_card_sudah:['SUDAH SUBMIT INVOICE','SUBMITTED INVOICE'], inv_sub_sudah:['WO yang sudah Submit Invoice','WOs with submitted invoice'], inv_card_belum:['BELUM SUBMIT INVOICE','NOT SUBMITTED INVOICE'], inv_sub_belum:['WO kolom Submit Invoice kosong','WOs with blank invoice column'], inv_belum_txt:['Belum Submit Invoice','Not submitted yet'],
  loading:['Memuat data...','Loading data...'], nodata:['Belum ada data','No data yet'], notable:['Tidak ada data','No data'],
  updated:['Diperbarui','Updated'], autoref:['otomatis setiap 1 menit','auto-refresh every minute'],
  connfail:['Gagal terhubung ke Apps Script. Pastikan URL benar dan deploy: Execute as Me, akses Anyone.','Cannot reach Apps Script. Check the URL and deployment: Execute as Me, access Anyone.'],
@@ -872,13 +880,14 @@ function drawMap(rows){
  if(g.size)map.fitBounds(grp.getBounds(),{padding:[20,20],maxZoom:14});
 }
 /* ---------- navigasi & kerangka ---------- */
-const NC={slip:['#0ea5e9','#2563eb','#fff8e8'],invoice:['#e11d74','#9d174d','#fff8e8'],dashboard:['#2c7b82','#1d4f55','#fff8e8'],absensi:['#d6262b','#8e1a1c','#fff8e8'],kpi:['#2f8f5b','#14532d','#fff8e8'],wo:['#f2b843','#e8772e','#2a1a14'],barang:['#7c3aed','#4c1d95','#fff8e8'],jadwal:['#0ea5e9','#1d4ed8','#fff8e8']};
+const NC={fieldsa:['#f97316','#b91c1c','#fff8e8'],slip:['#0ea5e9','#2563eb','#fff8e8'],invoice:['#e11d74','#9d174d','#fff8e8'],dashboard:['#2c7b82','#1d4f55','#fff8e8'],absensi:['#d6262b','#8e1a1c','#fff8e8'],kpi:['#2f8f5b','#14532d','#fff8e8'],wo:['#f2b843','#e8772e','#2a1a14'],barang:['#7c3aed','#4c1d95','#fff8e8'],jadwal:['#0ea5e9','#1d4ed8','#fff8e8']};
 const ncSt=k=>{const c=NC[k]||['#5b8cff','#8b5cf6','#fff'];return `--nc:${c[0]};--nc2:${c[1]};--nt:${c[2]}`};
 function buildNav(){
  $('nav').innerHTML=`<a id="n_dashboard" style="${ncSt('dashboard')}" onclick="go('dashboard')">${T('dashboard')}</a>`
   +`<div class="grp" onclick="toggleGrp()"><span>${T('menu')}</span><span id="arr" class="arr">${S.grpOpen?'▾':'▸'}</span></div>`
   +`<div id="grp" class="sub ${S.grpOpen?'':'hide'}">${(S.menus||[]).filter(m=>m!=='slip').map(m=>`<a id="n_${m}" style="${ncSt(m)}" onclick="go('${m}')">${T('lbl_'+m)}</a>`).join('')}`
-   +`<a id="n_slipgaji" href="https://aksaraperdanamultimedia.github.io/SLIPGAJI/" target="_blank" rel="noopener" style="${ncSt('slip')}">${T('lbl_slip')} <span class="xo">&#8599;</span></a>`;
+   +`<a id="n_slipgaji" href="https://aksaraperdanamultimedia.github.io/SLIPGAJI/" target="_blank" rel="noopener" style="${ncSt('slip')}">${T('lbl_slip')}<span class="xo-badge">&#8599;</span></a>`
+   +`<a id="n_fieldsa" href="https://fieldsa.fiberstar.co.id/#/tasklist/dispatchingboard" target="_blank" rel="noopener" style="${ncSt('fieldsa')}">${T('lbl_fieldsa')}<span class="xo-badge">&#8599;</span></a>`;
  markNav();
 }
 function markNav(){document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.id==='n_'+S.menu))}
@@ -887,7 +896,7 @@ function updText(){return S.updAt?`${T('updated')} ${new Date(S.updAt).toLocaleS
 function chrome(){
  document.documentElement.lang=LANG;
  $('ttl').textContent=S.menu==='dashboard'?T('dashboard'):(S.menu?T('lbl_'+S.menu):'');
- $('disp').hidden=S.menu!=='jadwal';$('dispT').textContent=T('dispatch');
+ 
  $('lid').classList.toggle('on',LANG==='id');$('len').classList.toggle('on',LANG==='en');
  $('upd').textContent=updText();
 }
