@@ -665,11 +665,9 @@ nav>a#n_dashboard{min-height:38px!important}
 /* ===== Panah link eksternal (SLIP GAJI, FIELDSA) ===== */
 .sub>a .xo-badge{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;margin-left:auto;width:24px;height:24px;border-radius:50%;background:#fff8e8;color:var(--ink);border:2px solid var(--ink);box-shadow:2px 2px 0 var(--ink);font-size:13px;line-height:1;font-weight:700}
 .sub>a{display:flex;align-items:center;gap:8px}
-@media(min-width:981px){
- .sub>a .xo-badge{animation:xoBob 1.6s ease-in-out infinite}
-}
-@keyframes xoBob{0%,100%{transform:translate(0,0)}50%{transform:translate(3px,-3px)}}
 @media(max-width:980px){.sub>a .xo-badge{width:22px;height:22px;font-size:12px}}
+.sub>a{text-decoration:none!important}
+.sub>a:hover{text-decoration:none!important}
 </style>
 </head>
 <body>
@@ -701,7 +699,7 @@ const R={};
 // Setiap kunci: [Bahasa Indonesia, English]
 const TX={
  dashboard:['OVERVIEW','OVERVIEW'], menu:['MENU','MENU'], back:['Kembali','Back'], dispatch:['Dispatch Now','Dispatch Now'],
- lbl_absensi:['ABSENSI','ATTENDANCE'], lbl_kpi:['KPI','KPI'], lbl_wo:['WO APM','WO APM'], lbl_barang:['WAREHOUSE','WAREHOUSE'], lbl_jadwal:['JADWAL INSTALL','INSTALL SCHEDULE'], lbl_slip:['SLIP GAJI','PAYSLIP'], lbl_fieldsa:['FIELDSA','FIELDSA'], lbl_invoice:['SUBMIT INVOICE','SUBMIT INVOICE'], inv_card_sudah:['SUDAH SUBMIT INVOICE','SUBMITTED INVOICE'], inv_sub_sudah:['WO yang sudah Submit Invoice','WOs with submitted invoice'], inv_card_belum:['BELUM SUBMIT INVOICE','NOT SUBMITTED INVOICE'], inv_sub_belum:['WO kolom Submit Invoice kosong','WOs with blank invoice column'], inv_belum_txt:['Belum Submit Invoice','Not submitted yet'],
+ lbl_absensi:['ABSENSI','ATTENDANCE'], lbl_kpi:['KPI','KPI'], lbl_wo:['WO APM','WO APM'], lbl_barang:['WAREHOUSE','WAREHOUSE'], lbl_jadwal:['JADWAL INSTALL','INSTALL SCHEDULE'], lbl_slip:['SLIP GAJI','PAYSLIP'], lbl_fieldsa:['FIELDSA','FIELDSA'], odp_red:['ODP Redaman Tinggi','High ODP Attenuation'], odp_loss:['ODP Loss','ODP Loss'], lbl_invoice:['SUBMIT INVOICE','SUBMIT INVOICE'], inv_card_sudah:['SUDAH SUBMIT INVOICE','SUBMITTED INVOICE'], inv_sub_sudah:['WO yang sudah Submit Invoice','WOs with submitted invoice'], inv_card_belum:['BELUM SUBMIT INVOICE','NOT SUBMITTED INVOICE'], inv_sub_belum:['WO kolom Submit Invoice kosong','WOs with blank invoice column'], inv_belum_txt:['Belum Submit Invoice','Not submitted yet'],
  loading:['Memuat data...','Loading data...'], nodata:['Belum ada data','No data yet'], notable:['Tidak ada data','No data'],
  updated:['Diperbarui','Updated'], autoref:['otomatis setiap 1 menit','auto-refresh every minute'],
  connfail:['Gagal terhubung ke Apps Script. Pastikan URL benar dan deploy: Execute as Me, akses Anyone.','Cannot reach Apps Script. Check the URL and deployment: Execute as Me, access Anyone.'],
@@ -1023,6 +1021,8 @@ function invPanel(base){
  return `<div class="panel"><div class="sec-t"><h3>${T('inv_title')}</h3><small>${rows.length} WO</small></div>`
    +tbl(T('inv_h'),rows.map(r=>[r.tgl,r.wo,r.cust,stLabel(r.s),String(r.inv)]))+`</div>`;
 }
+const ODPF={ODP_RED:/redaman\s*tinggi/i,ODP_LOSS:/odp\s*loss|\bloss\b/i};
+function isCat(r,k){return !['DONE','CANCEL'].includes(r.s)&&ODPF[k].test(String(r.st||'')+' '+String(r.ket||'')+' '+String(r.rem||''))}
 function diagBox(rows){
  const btn=`<div class="diagrow"><button class="diagbtn" onclick="showDiag()">${S.diag?'Tutup cek data sheet':'Cek data sheet'}</button></div>`;
  if(!S.diag)return btn;
@@ -1066,7 +1066,7 @@ R.wo=function(rows){
  const cR=base.filter(r=>r.resched).length;
  const bc=t=>base.filter(r=>r.s===t).length;
  const listBase=base;
- S.cache=S.wf==='ALL'?base:(S.wf==='RESCHED'?base.filter(r=>r.resched):base.filter(r=>r.s===S.wf));
+ S.cache=S.wf==='ALL'?base:(S.wf==='RESCHED'?base.filter(r=>r.resched):(ODPF[S.wf]?base.filter(r=>isCat(r,S.wf)):base.filter(r=>r.s===S.wf)));
  const a1=pc('DONE'),a2=a1+pc('PENDING');
  const periodTxt=useDate?`${S.dFrom||'…'} – ${S.dTo||'…'}`:(isAll?T('wo_allmonths'):monLabel(k));
  const ms=keys.slice().sort((a,b)=>a-b).map(kk=>{const g=all.filter(r=>ym(r.d)===kk),cn=s=>g.filter(r=>r.s===s).length;
@@ -1092,8 +1092,8 @@ R.wo=function(rows){
    const lab=m.k===k?`<b style="color:var(--ac)">${E(monLabel(m.k))}</b>`:E(monLabel(m.k));
    return [{h:lab},m.t,m.done,pp(m.done),m.pend,pp(m.pend),m.canc,pp(m.canc),m.lain,dh]});
  const WL={ALL:T('wo_all'),DONE:T('st_done'),PENDING:T('st_pending'),CANCEL:T('st_cancel'),LAIN:T('st_working'),BELUM:T('st_belum'),RESCHED:T('card_resched')};
- const cntOf=t=>t==='RESCHED'?base.filter(r=>r.resched).length:base.filter(r=>r.s===t).length;
- const seg=[['ALL',T('wo_all'),base.length],['DONE',T('st_done'),cntOf('DONE')],['PENDING',T('st_pending'),cntOf('PENDING')],['CANCEL',T('st_cancel'),cntOf('CANCEL')],['LAIN',T('st_working'),cntOf('LAIN')],['RESCHED',T('card_resched_t'),cntOf('RESCHED')]]
+ const cntOf=t=>t==='RESCHED'?base.filter(r=>r.resched).length:(ODPF[t]?base.filter(r=>isCat(r,t)).length:base.filter(r=>r.s===t).length);
+ const seg=[['ALL',T('wo_all'),base.length],['DONE',T('st_done'),cntOf('DONE')],['PENDING',T('st_pending'),cntOf('PENDING')],['CANCEL',T('st_cancel'),cntOf('CANCEL')],['LAIN',T('st_working'),cntOf('LAIN')],['RESCHED',T('card_resched_t'),cntOf('RESCHED')],['ODP_RED',T('odp_red'),cntOf('ODP_RED')],['ODP_LOSS',T('odp_loss'),cntOf('ODP_LOSS')]]
    .map(([v,t,q])=>`<button class="${S.wf===v?'on':''}" onclick="wfSet('${v}')">${E(t)} · ${q}</button>`).join('');
  $('out').innerHTML=`${remH}
  <div class="grid kpis">
