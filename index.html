@@ -717,7 +717,7 @@ nav>a#n_dashboard{min-height:38px!important}
 
 
 <script>
-const API='https://script.google.com/macros/s/AKfycbzTa4yQ8tP6BlnKdzgqTwOnsSpMPt2067OKlgfLsEkEU13BdJymnPwinBEn1h8mKJf10g/exec';
+const API='GANTI_DENGAN_URL_WEB_APP_APPS_SCRIPT';
 const BARANG_LIMIT=0.35;           // Segera Request: stok akhir <= 35% stok awal
 const MENIPIS_LIMIT=0.40;          // Stok Menipis: stok akhir <= 40% stok awal
 const DW='H-008';                  // DropWire 1 Core: satuan meter
@@ -730,7 +730,7 @@ const R={};
 // Setiap kunci: [Bahasa Indonesia, English]
 const TX={
  dashboard:['OVERVIEW','OVERVIEW'], menu:['MENU','MENU'], back:['Kembali','Back'], dispatch:['Dispatch Now','Dispatch Now'],
- lbl_absensi:['ABSENSI','ATTENDANCE'], lbl_kpi:['KPI','KPI'], lbl_wo:['WO APM','WO APM'], lbl_barang:['WAREHOUSE','WAREHOUSE'], lbl_jadwal:['JADWAL INSTALL','INSTALL SCHEDULE'], lbl_slip:['SLIP GAJI','PAYSLIP'], lbl_fieldsa:['FIELDSA','FIELDSA'], lbl_sisabar:['SISABAR','SISABAR'], map_kec:['Kecamatan','District'], abs_reset:['Reset','Reset'], odp_red:['ODP Redaman Tinggi','High ODP Attenuation'], odp_loss:['ODP Loss','ODP Loss'], lbl_invoice:['SUBMIT INVOICE','SUBMIT INVOICE'], inv_card_sudah:['SUDAH SUBMIT INVOICE','SUBMITTED INVOICE'], inv_sub_sudah:['WO yang sudah Submit Invoice','WOs with submitted invoice'], inv_card_belum:['BELUM SUBMIT INVOICE','NOT SUBMITTED INVOICE'], inv_sub_belum:['WO kolom Submit Invoice kosong','WOs with blank invoice column'], inv_belum_txt:['Belum Submit Invoice','Not submitted yet'],
+ lbl_absensi:['ABSENSI','ATTENDANCE'], lbl_kpi:['KPI','KPI'], lbl_wo:['WO APM','WO APM'], lbl_barang:['WAREHOUSE','WAREHOUSE'], lbl_jadwal:['JADWAL INSTALL','INSTALL SCHEDULE'], lbl_slip:['SLIP GAJI','PAYSLIP'], lbl_fieldsa:['FIELDSA','FIELDSA'], kpi_dl:['Download Excel','Download Excel'], lbl_sisabar:['SISABAR','SISABAR'], map_kec:['Kecamatan','District'], abs_reset:['Reset','Reset'], odp_red:['ODP Redaman Tinggi','High ODP Attenuation'], odp_loss:['ODP Loss','ODP Loss'], lbl_invoice:['SUBMIT INVOICE','SUBMIT INVOICE'], inv_card_sudah:['SUDAH SUBMIT INVOICE','SUBMITTED INVOICE'], inv_sub_sudah:['WO yang sudah Submit Invoice','WOs with submitted invoice'], inv_card_belum:['BELUM SUBMIT INVOICE','NOT SUBMITTED INVOICE'], inv_sub_belum:['WO kolom Submit Invoice kosong','WOs with blank invoice column'], inv_belum_txt:['Belum Submit Invoice','Not submitted yet'],
  loading:['Memuat data...','Loading data...'], nodata:['Belum ada data','No data yet'], notable:['Tidak ada data','No data'],
  updated:['Diperbarui','Updated'], autoref:['otomatis setiap 1 menit','auto-refresh every minute'],
  connfail:['Gagal terhubung ke Apps Script. Pastikan URL benar dan deploy: Execute as Me, akses Anyone.','Cannot reach Apps Script. Check the URL and deployment: Execute as Me, access Anyone.'],
@@ -1161,23 +1161,31 @@ function woTab(){const q=S.q.toLowerCase();const f=(S.cache||[]).filter(r=>!q||J
   f.map((r,i)=>[i+1,r.tgl,r.wo,r.cust,{h:`<span class="wrapc">${E(r.alamat||'-')}</span>`},r.tek,pill(stLabel(r.s),C[r.s]),{h:`<span class="wrapc">${E(r.ket)}</span>`}]),'auto')}
 
 /* ---------- KPI ---------- */
+async function dlKpi(){
+ const r=await api({menu:'kpixls',name:S.k});
+ if(!r||!r.ok||!r.d||r.d.err){alert((r&&r.d&&r.d.err)||'Gagal membuat file Excel');return}
+ const bin=atob(r.d.b64),u8=new Uint8Array(bin.length);
+ for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+ const url=URL.createObjectURL(new Blob([u8],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+ const a=document.createElement('a');a.href=url;a.download=r.d.name;document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),4000);
+}
 R.kpi=function(d){if(d.err){$('out').innerHTML=`<div class="err">${E(d.err)}</div>`;return}const ks=Object.keys(d.months||{});if(!ks.length){$('out').innerHTML=empty();return}
- if(!ks.includes(S.k))S.k=ks[ks.length-1];
- setCtl(`<select onchange="S.k=this.value;draw()">${ks.map(k=>`<option ${k===S.k?'selected':''}>${E(k)}</option>`).join('')}</select><span class="clock">${T('year')} ${E(d.year)}</span>`);
- const m=d.months[S.k],rows=m.rows,val=r=>parseFloat(String(r[6]).replace('%','').replace(',','.'))||0;
- const v=rows.map(val),hi=Math.max(...v),lo=Math.min(...v);
- const names=x=>rows.filter((r,i)=>v[i]===x).map(r=>r[1]).join(', ');
- const tgt=rows.reduce((s,r)=>s+(+r[2]||0),0),rea=rows.reduce((s,r)=>s+(+r[3]||0),0);
- const avg=m.avg?val(m.avg):0;
- const pred=p=>/KURANG/i.test(p)?'er':/BAIK|BAGUS|SANGAT/i.test(p)?'ok':'wr';
- $('out').innerHTML=`<div class="grid kpis">
-  ${card(T('kpi_max'),`<span style="font-size:17px">${E(names(hi))}</span>`,hi.toFixed(1)+'%','var(--ok)')}
-  ${card(T('kpi_min'),`<span style="font-size:17px">${E(names(lo))}</span>`,lo.toFixed(1)+'%','var(--er)')}
-  ${card(T('kpi_avg'),avg.toFixed(1)+'%',`${rea} ${T('kpi_of')} ${tgt}`,'var(--ac)')}
-  ${card(T('kpi_total'),rea,`${T('kpi_of')} ${tgt}`,'var(--ac2)')}
- </div>
- <div class="panel"><div class="sec-t"><h3>${T('kpi_title')} ${E(S.k)}</h3><small>${T('kpi_target')}</small></div>
- ${tbl(T('kpi_h'),rows.map(r=>[r[0],r[1],r[2],r[3],r[4],r[5],bar(val(r)),pill(predLabel(r[7]),pred(r[7]))]))}</div>`};
+  if(!ks.includes(S.k))S.k=ks[ks.length-1];
+  setCtl(`<select onchange="S.k=this.value;draw()">${ks.map(k=>`<option ${k===S.k?'selected':''}>${E(k)}</option>`).join('')}</select><button class="diagbtn" onclick="dlKpi()">${T('kpi_dl')}</button><span class="clock">${T('year')} ${E(d.year)}</span>`);
+  const m=d.months[S.k],rows=m.rows,val=r=>parseFloat(String(r[6]).replace('%','').replace(',','.'))||0;
+  const v=rows.map(val),hi=Math.max(...v),lo=Math.min(...v);
+  const names=x=>rows.filter((r,i)=>v[i]===x).map(r=>r[1]).join(', ');
+  const tgt=rows.reduce((s,r)=>s+(+r[2]||0),0),rea=rows.reduce((s,r)=>s+(+r[3]||0),0);
+  const avg=m.avg?val(m.avg):0;
+  const pred=p=>/KURANG/i.test(p)?'er':/BAIK|BAGUS|SANGAT/i.test(p)?'ok':'wr';
+  $('out').innerHTML=`<div class="grid kpis">
+   ${card(T('kpi_max'),`<span style="font-size:17px">${E(names(hi))}</span>`,hi.toFixed(1)+'%','var(--ok)')}
+   ${card(T('kpi_min'),`<span style="font-size:17px">${E(names(lo))}</span>`,lo.toFixed(1)+'%','var(--er)')}
+   ${card(T('kpi_avg'),avg.toFixed(1)+'%',`${rea} ${T('kpi_of')} ${tgt}`,'var(--ac)')}
+  </div>
+  <div class="panel"><div class="sec-t"><h3>${T('kpi_title')} ${E(S.k)}</h3><small>${T('kpi_target')}</small></div>
+  ${tbl(T('kpi_h'),rows.map(r=>[r[0],r[1],r[2],r[3],r[4],r[5],bar(val(r)),pill(predLabel(r[7]),pred(r[7]))]))}</div>`};
 
 /* ---------- SUBMIT INVOICE ---------- */
 R.invoice=function(d){
