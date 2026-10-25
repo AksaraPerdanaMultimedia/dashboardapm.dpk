@@ -719,7 +719,7 @@ nav>a#n_dashboard{min-height:38px!important}
 
 
 <script>
-const API='https://script.google.com/macros/s/AKfycbzA0a_zptqf0VLfwvuNUrRa7ttdSV80FRP3EcDfxpAgOOcIhfcd16V1LlHYTZoq-iEz/exec';
+const API='https://script.google.com/macros/s/AKfycbwNeELQL5i8BkCQoLAIqspg_BpX7IYPO790aVKWu7EUTDj8u2sLwXyXIJtSglEKee0kgA/exec';
 const BARANG_LIMIT=0.35;           // Segera Request: stok akhir <= 35% stok awal
 const MENIPIS_LIMIT=0.40;          // Stok Menipis: stok akhir <= 40% stok awal
 const DW='H-008';                  // DropWire 1 Core: satuan meter
@@ -1165,13 +1165,17 @@ function woTab(){const q=S.q.toLowerCase();const f=(S.cache||[]).filter(r=>!q||J
 /* ---------- KPI ---------- */
 const DL_ICON='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>';
 async function dlXlsx(menu){
- const r=await api({menu:menu,name:S.k});
- if(!r||!r.ok||!r.d||r.d.err){alert((r&&r.d&&r.d.err)||'Gagal membuat file Excel');return}
- const bin=atob(r.d.b64),u8=new Uint8Array(bin.length);
- for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
- const url=URL.createObjectURL(new Blob([u8],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
- const a=document.createElement('a');a.href=url;a.download=r.d.name;document.body.appendChild(a);a.click();a.remove();
- setTimeout(()=>URL.revokeObjectURL(url),4000);
+ document.body.style.cursor='wait';
+ try{
+  const r=await api({menu:menu,name:S.k});
+  const err=!r?'Tidak ada respon dari server':(!r.ok?(r.err||'Gagal'):(r.d&&r.d.err));
+  if(err||!r.d||!r.d.b64){alert(err||'Gagal membuat file Excel');return}
+  const bin=atob(r.d.b64),u8=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+  const url=URL.createObjectURL(new Blob([u8],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+  const a=document.createElement('a');a.href=url;a.download=r.d.name;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),4000);
+ }finally{document.body.style.cursor=''}
 }
 function dlKpi(){return dlXlsx('kpixls')}
 function dlPoinKpi(){return dlXlsx('kpipoin')}
