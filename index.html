@@ -711,6 +711,13 @@ nav>a#n_dashboard{min-height:38px!important}
 .proc-bar i{display:block;height:100%;width:0;background:repeating-linear-gradient(90deg,#1ee37a 0 7px,transparent 7px 9px)}
 .proc-bar i{animation:procLoop 5.6s linear infinite!important}
 @keyframes procLoop{0%{width:0;animation-timing-function:steps(6,end)}64.3%{width:60%}100%{width:60%}}
+.ctr{display:flex;justify-content:center;align-items:center}
+.proc{display:inline-flex;flex-direction:column;min-width:170px;border:3px solid var(--ink);border-radius:10px;overflow:hidden;box-shadow:3px 3px 0 var(--ink);background:#2dfbd0}
+.proc-h{background:#fff8e8;border-bottom:3px solid var(--ink);text-align:center;padding:4px 10px;font-family:'Righteous',cursive;font-size:14px;letter-spacing:.06em;color:var(--ink)}
+.proc-b{padding:8px 10px}
+.proc-track{position:relative;height:24px;border:3px solid var(--ink);background:#c9fff4;overflow:hidden}
+.proc-fill{position:absolute;left:0;top:0;bottom:0;width:0;background:#00cdbd}
+.proc-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Righteous',cursive;font-weight:700;font-size:13px;color:var(--ink)}
 </style>
 </head>
 <body>
@@ -742,7 +749,7 @@ const R={};
 // Setiap kunci: [Bahasa Indonesia, English]
 const TX={
  dashboard:['OVERVIEW','OVERVIEW'], menu:['MENU','MENU'], back:['Kembali','Back'], dispatch:['Dispatch Now','Dispatch Now'],
- lbl_absensi:['ABSENSI','ATTENDANCE'], lbl_kpi:['KPI','KPI'], lbl_wo:['WO APM','WO APM'], lbl_barang:['WAREHOUSE','WAREHOUSE'], lbl_jadwal:['JADWAL INSTALL','INSTALL SCHEDULE'], lbl_slip:['SLIP GAJI','PAYSLIP'], lbl_fieldsa:['FIELDSA','FIELDSA'], proses_hari:['PROSES HARI INI','IN PROGRESS TODAY'], kpi_dl:['Download WO KPI','Download WO KPI'], kpi_dl2:['Download Poin KPI','Download Poin KPI'], lbl_sisabar:['SISABAR','SISABAR'], map_kec:['Kecamatan','District'], abs_reset:['Reset','Reset'], odp_red:['ODP Redaman Tinggi','High ODP Attenuation'], odp_loss:['ODP Loss','ODP Loss'], lbl_invoice:['SUBMIT INVOICE','SUBMIT INVOICE'], inv_card_sudah:['SUDAH SUBMIT INVOICE','SUBMITTED INVOICE'], inv_sub_sudah:['WO yang sudah Submit Invoice','WOs with submitted invoice'], inv_card_belum:['BELUM SUBMIT INVOICE','NOT SUBMITTED INVOICE'], inv_sub_belum:['WO kolom Submit Invoice kosong','WOs with blank invoice column'], inv_belum_txt:['Belum Submit Invoice','Not submitted yet'],
+ lbl_absensi:['ABSENSI','ATTENDANCE'], lbl_kpi:['KPI','KPI'], lbl_wo:['WO APM','WO APM'], lbl_barang:['WAREHOUSE','WAREHOUSE'], lbl_jadwal:['JADWAL INSTALL','INSTALL SCHEDULE'], lbl_slip:['SLIP GAJI','PAYSLIP'], lbl_fieldsa:['FIELDSA','FIELDSA'], proses_hari:['PROSES','PROCESS'], kpi_dl:['Download WO KPI','Download WO KPI'], kpi_dl2:['Download Poin KPI','Download Poin KPI'], lbl_sisabar:['SISABAR','SISABAR'], map_kec:['Kecamatan','District'], abs_reset:['Reset','Reset'], odp_red:['ODP Redaman Tinggi','High ODP Attenuation'], odp_loss:['ODP Loss','ODP Loss'], lbl_invoice:['SUBMIT INVOICE','SUBMIT INVOICE'], inv_card_sudah:['SUDAH SUBMIT INVOICE','SUBMITTED INVOICE'], inv_sub_sudah:['WO yang sudah Submit Invoice','WOs with submitted invoice'], inv_card_belum:['BELUM SUBMIT INVOICE','NOT SUBMITTED INVOICE'], inv_sub_belum:['WO kolom Submit Invoice kosong','WOs with blank invoice column'], inv_belum_txt:['Belum Submit Invoice','Not submitted yet'],
  loading:['Memuat data...','Loading data...'], nodata:['Belum ada data','No data yet'], notable:['Tidak ada data','No data'],
  updated:['Diperbarui','Updated'], autoref:['otomatis setiap 1 menit','auto-refresh every minute'],
  connfail:['Gagal terhubung ke Apps Script. Pastikan URL benar dan deploy: Execute as Me, akses Anyone.','Cannot reach Apps Script. Check the URL and deployment: Execute as Me, access Anyone.'],
@@ -760,7 +767,7 @@ const TX={
  wo_cmp_sum:['bulan · total','months · total'], wo_best:['Persentase Done tertinggi','Highest Done rate'],
  wo_resched:['PENGINGAT JADWAL PENDING','PENDING SCHEDULE REMINDER'], wo_detail:['Detail Work Order','Work Order Details'],
  wo_search:['Cari WO, customer, teknisi...','Search WO, customer, technician...'],
- wo_h:[['No','Tanggal','Reference Code','Subscriber','Alamat','Teknisi','Status','Keterangan'],['No','Date','Reference Code','Subscriber','Address','Technician','Status','Notes']],
+ wo_h:[['No','Tanggal','Reference Code','Subscriber','Alamat','Keterangan','Status','Teknisi'],['No','Date','Reference Code','Subscriber','Address','Notes','Status','Technician']],
  wo_hc:[['Bulan','Total','Done','Done %','Pending','Pending %','Cancel','Cancel %','Lainnya','Selisih Total'],['Month','Total','Done','Done %','Pending','Pending %','Cancel','Cancel %','Other','Change in Total']],
  wo_hr:[['Reference Code','Subscriber','Alamat','Teknisi','Jadwal Ulang','Sisa'],['Reference Code','Subscriber','Address','Technician','Reschedule','Remaining']],
  wo_overdue:['Lewat jadwal','Overdue'], wo_today:['Hari ini','Today'],
@@ -1066,7 +1073,8 @@ function invPanel(base){
 }
 const ODPF={ODP_RED:/redaman\s*tinggi/i,ODP_LOSS:/odp\s*loss|\bloss\b/i};
 function isCat(r,k){return !['DONE','CANCEL'].includes(r.s)&&ODPF[k].test(String(r.st||'')+' '+String(r.ket||'')+' '+String(r.rem||''))}
-function procHtml(){return `<div class="proc"><div class="proc-t">${T('proses_hari')}</div><div class="proc-bar"><i></i></div></div>`}
+function procHtml(){return `<div class="proc"><div class="proc-h">${T('proses_hari')}</div><div class="proc-b"><div class="proc-track"><div class="proc-fill"></div><span class="proc-pct">0%</span></div></div></div>`}
+setInterval(()=>{const p=Math.round((Date.now()%2000)/2000*70);document.querySelectorAll('.proc').forEach(el=>{const f=el.querySelector('.proc-fill'),t=el.querySelector('.proc-pct');if(f)f.style.width=p+'%';if(t)t.textContent=p+'%'})},80);
 function diagBox(rows){
  const btn=`<div class="diagrow"><button class="diagbtn" onclick="showDiag()">${S.diag?'Tutup cek data sheet':'Cek data sheet'}</button></div>`;
  if(!S.diag)return btn;
@@ -1172,7 +1180,7 @@ function wfSet(t){S.wf=t;S.q='';draw();const e=$('wdet');if(e){e.classList.add('
 function woTab(){const q=S.q.toLowerCase();const f=(S.cache||[]).filter(r=>!q||JSON.stringify(r).toLowerCase().includes(q));
  const C={DONE:'ok',PENDING:'wr',CANCEL:'er',LAIN:'in',BELUM:'in'};
  $('wt').innerHTML=tbl(T('wo_h'),
-  f.map((r,i)=>[i+1,r.tgl,r.wo,r.cust,{h:`<span class="wrapc">${E(r.alamat||'-')}</span>`},r.tek,(r.s==='LAIN'?{h:procHtml()}:pill(stLabel(r.s),C[r.s])),{h:`<span class="wrapc">${E(r.ket)}</span>`}]),'auto')}
+  f.map((r,i)=>[i+1,r.tgl,r.wo,r.cust,{h:`<span class="wrapc">${E(r.alamat||'-')}</span>`},{h:`<span class="wrapc">${E(r.ket)}</span>`},{h:`<div class="ctr">${r.s==='LAIN'?procHtml():pill(stLabel(r.s),C[r.s])}</div>`},r.tek]),'auto')}
 
 /* ---------- KPI ---------- */
 const DL_ICON='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>';
