@@ -701,6 +701,9 @@ nav>a#n_dashboard{min-height:38px!important}
 .sideclk .clock{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;color:#fff8e8!important;text-shadow:2px 2px 0 var(--ink)!important;font-size:15px!important;font-weight:700!important;letter-spacing:.04em!important}
 .kpibtns{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-left:auto;margin-right:12px}
 .kpibtn{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:7px 12px}
+.tw table{width:100%}
+.wosel{min-width:0}
+.wosel select{width:100%;font-family:'Righteous',cursive;font-size:14px;padding:10px 12px;border:3px solid var(--ink);border-radius:12px;background:var(--cream2);color:var(--ink);box-shadow:3px 3px 0 var(--ink);cursor:pointer}
 </style>
 </head>
 <body>
@@ -754,7 +757,7 @@ const TX={
  wo_hc:[['Bulan','Total','Done','Done %','Pending','Pending %','Cancel','Cancel %','Lainnya','Selisih Total'],['Month','Total','Done','Done %','Pending','Pending %','Cancel','Cancel %','Other','Change in Total']],
  wo_hr:[['Reference Code','Subscriber','Alamat','Teknisi','Jadwal Ulang','Sisa'],['Reference Code','Subscriber','Address','Technician','Reschedule','Remaining']],
  wo_overdue:['Lewat jadwal','Overdue'], wo_today:['Hari ini','Today'],
- st_done:['Done','Done'], st_pending:['Pending','Pending'], st_cancel:['Cancel','Cancel'], st_working:['Sedang Di Kerjakan Hari Ini','Being Worked On Today'], st_belum:['Belum Dikerjakan','Not Started Yet'], card_resched:['CASE BY CASE PENDING','CASE BY CASE PENDING'], card_resched_t:['Case by Case Pending','Case by Case Pending'], inv_title:['Submit Invoice','Submit Invoice'], inv_h:[['Tanggal','Reference Code','Subscriber','Submit Invoice'],['Date','Reference Code','Subscriber','Submit Invoice']], sd_besok:['Sudah Dijadwalkan Besok','Scheduled for Tomorrow'], sd_hari:['Sudah Dijadwalkan Hari Ini','Scheduled for Today'], sd_tgl:['Sudah Dijadwalkan {tgl}','Scheduled for {tgl}'], ov_allmonths:['Semua bulan','All months'], dt_from:['Dari','From'], dt_to:['Sampai','To'], dt_reset:['Reset','Reset'],
+ st_done:['Done','Done'], st_pending:['Pending','Pending'], st_cancel:['Cancel','Cancel'], st_working:['Sedang Di Kerjakan Hari Ini','Being Worked On Today'], st_belum:['Belum Dikerjakan','Not Started Yet'], card_resched:['CASE PENDING','CASE PENDING'], card_resched_t:['Case by Case Pending','Case by Case Pending'], inv_title:['Submit Invoice','Submit Invoice'], inv_h:[['Tanggal','Reference Code','Subscriber','Submit Invoice'],['Date','Reference Code','Subscriber','Submit Invoice']], sd_besok:['Sudah Dijadwalkan Besok','Scheduled for Tomorrow'], sd_hari:['Sudah Dijadwalkan Hari Ini','Scheduled for Today'], sd_tgl:['Sudah Dijadwalkan {tgl}','Scheduled for {tgl}'], ov_allmonths:['Semua bulan','All months'], dt_from:['Dari','From'], dt_to:['Sampai','To'], dt_reset:['Reset','Reset'],
  // reminder
  rem_now:['SEGERA – JADWAL ULANG HARI INI','URGENT – RESCHEDULE TODAY'], rem_tmr:['SEGERA – JADWAL ULANG BESOK 16.00','URGENT – RESCHEDULE TOMORROW 16:00'],
  rem_h:['PENGINGAT JADWAL ULANG H-','RESCHEDULE REMINDER D-'], rem_sched:['Jadwal:','Schedule:'],
@@ -1089,7 +1092,7 @@ R.wo=function(rows){
  if(!S.k)S.k=String(keys.includes(curK)?curK:keys[0]);
  const isAll=S.k==='all';
  const k=isAll?null:(keys.includes(+S.k)?+S.k:(keys.includes(curK)?curK:keys[0]));
- setCtl(`<select onchange="S.k=this.value;draw()"><option value="all" ${isAll?'selected':''}>${E(T('wo_allmonths'))}</option>${opts(keys,k,monLabel)}</select>`);
+ setCtl('');
  const f=isAll?all:all.filter(r=>ym(r.d)===k);
  const useDate=!!(S.dFrom||S.dTo);
  const dF=S.dFrom?pd(S.dFrom):null,dT=S.dTo?pd(S.dTo):null;
@@ -1129,6 +1132,7 @@ R.wo=function(rows){
  const seg=[['ALL',T('wo_all'),base.length],['DONE',T('st_done'),cntOf('DONE')],['PENDING',T('st_pending'),cntOf('PENDING')],['CANCEL',T('st_cancel'),cntOf('CANCEL')],['LAIN',T('st_working'),cntOf('LAIN')],['ODP_RED',T('odp_red'),cntOf('ODP_RED')],['ODP_LOSS',T('odp_loss'),cntOf('ODP_LOSS')]]
    .map(([v,t,q])=>`<button class="${S.wf===v?'on':''}" onclick="wfSet('${v}')">${E(t)} · ${q}</button>`).join('');
  $('out').innerHTML=`${remH}
+ <div class="grid kpis"><div class="wosel"><select onchange="S.k=this.value;draw()"><option value="all" ${isAll?'selected':''}>${E(T('wo_allmonths'))}</option>${opts(keys,k,monLabel)}</select></div></div>
  <div class="grid kpis">
   ${card(T('wo_total'),n,periodTxt,'var(--ac)',"wfSet('ALL')",S.wf==='ALL')}
   ${card(T('st_done'),c('DONE'),`<span style="color:#22a355">${pc('DONE').toFixed(1)}%</span> ${T('wo_pctof')}`,'var(--ok)',"wfSet('DONE')",S.wf==='DONE')}
