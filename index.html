@@ -1181,7 +1181,7 @@ function wfSet(t){S.wf=t;S.q='';draw();const e=$('wdet');if(e){e.classList.add('
 function woTab(){const q=S.q.toLowerCase();const f=(S.cache||[]).filter(r=>!q||JSON.stringify(r).toLowerCase().includes(q));
  const C={DONE:'ok',PENDING:'wr',CANCEL:'er',LAIN:'in',BELUM:'in'};
  $('wt').innerHTML=tbl(T('wo_h'),
-  f.map((r,i)=>[i+1,r.tgl,r.wo,r.cust,{h:`<span class="wrapc">${E(r.alamat||'-')}</span>`},r.tek,{h:`<div class="ctr">${r.s==='LAIN'?procHtml():pill(stLabel(r.s),C[r.s])}</div>`},{h:`<span class="wrapc">${E(r.ket)}</span>`}]),'auto')}
+  f.map((r,i)=>[i+1,r.tgl,r.wo,r.cust,{h:`<span class="wrapc">${E(r.alamat||'-')}</span>`},r.tek,{h:'<div class="ctr">'+(r.s==='LAIN'?procHtml():((p=>typeof p==='string'?p:p.h)(pill(stLabel(r.s),C[r.s]))))+'</div>'},{h:`<span class="wrapc">${E(r.ket)}</span>`}]),'auto')}
 
 /* ---------- KPI ---------- */
 const DL_ICON='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>';
