@@ -704,6 +704,13 @@ nav>a#n_dashboard{min-height:38px!important}
 .tw table{width:100%}
 .wosel{min-width:0}
 .wosel select{width:100%;font-family:'Righteous',cursive;font-size:14px;padding:10px 12px;border:3px solid var(--ink);border-radius:12px;background:var(--cream2);color:var(--ink);box-shadow:3px 3px 0 var(--ink);cursor:pointer}
+/* ===== Status proses hari ini: bar loading bergaya piksel ===== */
+.proc{display:inline-flex;flex-direction:column;gap:5px;min-width:160px;padding:6px 10px;background:#1e3a4f;border:2px solid var(--ink);border-radius:10px;box-shadow:2px 2px 0 var(--ink)}
+.proc-t{font-family:'Righteous',cursive;font-size:11px;letter-spacing:.12em;color:#1ee37a;line-height:1}
+.proc-bar{height:12px;border:2px solid #1ee37a;padding:1px;background:#0f2433;border-radius:2px}
+.proc-bar i{display:block;height:100%;width:0;background:repeating-linear-gradient(90deg,#1ee37a 0 7px,transparent 7px 9px)}
+.proc-bar i{animation:procLoop 5.6s linear infinite!important}
+@keyframes procLoop{0%{width:0;animation-timing-function:steps(6,end)}64.3%{width:60%}100%{width:60%}}
 </style>
 </head>
 <body>
@@ -735,7 +742,7 @@ const R={};
 // Setiap kunci: [Bahasa Indonesia, English]
 const TX={
  dashboard:['OVERVIEW','OVERVIEW'], menu:['MENU','MENU'], back:['Kembali','Back'], dispatch:['Dispatch Now','Dispatch Now'],
- lbl_absensi:['ABSENSI','ATTENDANCE'], lbl_kpi:['KPI','KPI'], lbl_wo:['WO APM','WO APM'], lbl_barang:['WAREHOUSE','WAREHOUSE'], lbl_jadwal:['JADWAL INSTALL','INSTALL SCHEDULE'], lbl_slip:['SLIP GAJI','PAYSLIP'], lbl_fieldsa:['FIELDSA','FIELDSA'], kpi_dl:['Download WO KPI','Download WO KPI'], kpi_dl2:['Download Poin KPI','Download Poin KPI'], lbl_sisabar:['SISABAR','SISABAR'], map_kec:['Kecamatan','District'], abs_reset:['Reset','Reset'], odp_red:['ODP Redaman Tinggi','High ODP Attenuation'], odp_loss:['ODP Loss','ODP Loss'], lbl_invoice:['SUBMIT INVOICE','SUBMIT INVOICE'], inv_card_sudah:['SUDAH SUBMIT INVOICE','SUBMITTED INVOICE'], inv_sub_sudah:['WO yang sudah Submit Invoice','WOs with submitted invoice'], inv_card_belum:['BELUM SUBMIT INVOICE','NOT SUBMITTED INVOICE'], inv_sub_belum:['WO kolom Submit Invoice kosong','WOs with blank invoice column'], inv_belum_txt:['Belum Submit Invoice','Not submitted yet'],
+ lbl_absensi:['ABSENSI','ATTENDANCE'], lbl_kpi:['KPI','KPI'], lbl_wo:['WO APM','WO APM'], lbl_barang:['WAREHOUSE','WAREHOUSE'], lbl_jadwal:['JADWAL INSTALL','INSTALL SCHEDULE'], lbl_slip:['SLIP GAJI','PAYSLIP'], lbl_fieldsa:['FIELDSA','FIELDSA'], proses_hari:['PROSES HARI INI','IN PROGRESS TODAY'], kpi_dl:['Download WO KPI','Download WO KPI'], kpi_dl2:['Download Poin KPI','Download Poin KPI'], lbl_sisabar:['SISABAR','SISABAR'], map_kec:['Kecamatan','District'], abs_reset:['Reset','Reset'], odp_red:['ODP Redaman Tinggi','High ODP Attenuation'], odp_loss:['ODP Loss','ODP Loss'], lbl_invoice:['SUBMIT INVOICE','SUBMIT INVOICE'], inv_card_sudah:['SUDAH SUBMIT INVOICE','SUBMITTED INVOICE'], inv_sub_sudah:['WO yang sudah Submit Invoice','WOs with submitted invoice'], inv_card_belum:['BELUM SUBMIT INVOICE','NOT SUBMITTED INVOICE'], inv_sub_belum:['WO kolom Submit Invoice kosong','WOs with blank invoice column'], inv_belum_txt:['Belum Submit Invoice','Not submitted yet'],
  loading:['Memuat data...','Loading data...'], nodata:['Belum ada data','No data yet'], notable:['Tidak ada data','No data'],
  updated:['Diperbarui','Updated'], autoref:['otomatis setiap 1 menit','auto-refresh every minute'],
  connfail:['Gagal terhubung ke Apps Script. Pastikan URL benar dan deploy: Execute as Me, akses Anyone.','Cannot reach Apps Script. Check the URL and deployment: Execute as Me, access Anyone.'],
@@ -1059,6 +1066,7 @@ function invPanel(base){
 }
 const ODPF={ODP_RED:/redaman\s*tinggi/i,ODP_LOSS:/odp\s*loss|\bloss\b/i};
 function isCat(r,k){return !['DONE','CANCEL'].includes(r.s)&&ODPF[k].test(String(r.st||'')+' '+String(r.ket||'')+' '+String(r.rem||''))}
+function procHtml(){return `<div class="proc"><div class="proc-t">${T('proses_hari')}</div><div class="proc-bar"><i></i></div></div>`}
 function diagBox(rows){
  const btn=`<div class="diagrow"><button class="diagbtn" onclick="showDiag()">${S.diag?'Tutup cek data sheet':'Cek data sheet'}</button></div>`;
  if(!S.diag)return btn;
@@ -1164,7 +1172,7 @@ function wfSet(t){S.wf=t;S.q='';draw();const e=$('wdet');if(e){e.classList.add('
 function woTab(){const q=S.q.toLowerCase();const f=(S.cache||[]).filter(r=>!q||JSON.stringify(r).toLowerCase().includes(q));
  const C={DONE:'ok',PENDING:'wr',CANCEL:'er',LAIN:'in',BELUM:'in'};
  $('wt').innerHTML=tbl(T('wo_h'),
-  f.map((r,i)=>[i+1,r.tgl,r.wo,r.cust,{h:`<span class="wrapc">${E(r.alamat||'-')}</span>`},r.tek,pill(stLabel(r.s),C[r.s]),{h:`<span class="wrapc">${E(r.ket)}</span>`}]),'auto')}
+  f.map((r,i)=>[i+1,r.tgl,r.wo,r.cust,{h:`<span class="wrapc">${E(r.alamat||'-')}</span>`},r.tek,(r.s==='LAIN'?{h:procHtml()}:pill(stLabel(r.s),C[r.s])),{h:`<span class="wrapc">${E(r.ket)}</span>`}]),'auto')}
 
 /* ---------- KPI ---------- */
 const DL_ICON='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>';
