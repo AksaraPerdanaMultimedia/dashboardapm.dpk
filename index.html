@@ -719,6 +719,18 @@ nav>a#n_dashboard{min-height:38px!important}
 .proc-fill{position:absolute;left:0;top:0;bottom:0;width:0;background:#00cdbd}
 .proc-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Righteous',cursive;font-weight:700;font-size:11px;color:var(--ink)}
 table.auto th:nth-child(7),table.auto td:nth-child(7){text-align:center}
+.mseg+.mseg{margin-top:18px}
+.mdiv{display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding-bottom:8px;border-bottom:3px solid var(--ink);margin-bottom:10px;font-family:'Righteous',cursive;font-size:15px;letter-spacing:.04em}
+.mdiv em{font-style:normal;font-size:12px;color:var(--mu);font-family:'Poppins',sans-serif}
+.mdiv i{margin-left:auto;font-style:normal;font-size:12px;color:var(--mu);font-family:'Poppins',sans-serif}
+#ttl{text-align:left}
+@media(max-width:980px){
+ .dtr{display:grid;grid-template-columns:1fr;gap:8px;align-items:stretch}
+ .dtr label{display:grid;grid-template-columns:62px 1fr;align-items:center;gap:10px;margin:0;width:100%}
+ .dtr label+label{margin-left:0}
+ .dtr input{width:100%;min-width:0}
+ .dtr button{width:100%}
+}
 </style>
 </head>
 <body>
@@ -750,7 +762,7 @@ const R={};
 // Setiap kunci: [Bahasa Indonesia, English]
 const TX={
  dashboard:['OVERVIEW','OVERVIEW'], menu:['MENU','MENU'], back:['Kembali','Back'], dispatch:['Dispatch Now','Dispatch Now'],
- lbl_absensi:['ABSENSI','ATTENDANCE'], lbl_kpi:['KPI','KPI'], lbl_wo:['WO APM','WO APM'], lbl_barang:['WAREHOUSE','WAREHOUSE'], lbl_jadwal:['JADWAL INSTALL','INSTALL SCHEDULE'], lbl_slip:['SLIP GAJI','PAYSLIP'], lbl_fieldsa:['FIELDSA','FIELDSA'], proses_hari:['PROSES','PROCESS'], kpi_dl:['Download WO KPI','Download WO KPI'], kpi_dl2:['Download Poin KPI','Download Poin KPI'], lbl_sisabar:['SISABAR','SISABAR'], lbl_masuk:['JADWAL MASUK TEKNISI','TECHNICIAN SCHEDULE'], masuk_hari:['Masuk Hari Ini','Working Today'], masuk_besok:['Masuk Besok','Working Tomorrow'], masuk_org:['teknisi','technicians'], masuk_legend:['P1 = Masuk · L = Libur','P1 = Working · L = Off'], map_kec:['Kecamatan','District'], abs_reset:['Reset','Reset'], odp_red:['ODP Redaman Tinggi','High ODP Attenuation'], odp_loss:['ODP Loss','ODP Loss'], lbl_invoice:['SUBMIT INVOICE','SUBMIT INVOICE'], inv_card_sudah:['SUDAH SUBMIT INVOICE','SUBMITTED INVOICE'], inv_sub_sudah:['WO yang sudah Submit Invoice','WOs with submitted invoice'], inv_card_belum:['BELUM SUBMIT INVOICE','NOT SUBMITTED INVOICE'], inv_sub_belum:['WO kolom Submit Invoice kosong','WOs with blank invoice column'], inv_belum_txt:['Belum Submit Invoice','Not submitted yet'],
+ lbl_absensi:['ABSENSI','ATTENDANCE'], lbl_kpi:['KPI','KPI'], lbl_wo:['WO APM','WO APM'], lbl_barang:['WAREHOUSE','WAREHOUSE'], lbl_jadwal:['JADWAL INSTALL','INSTALL SCHEDULE'], lbl_slip:['SLIP GAJI','PAYSLIP'], lbl_fieldsa:['FIELDSA','FIELDSA'], proses_hari:['PROSES','PROCESS'], kpi_dl:['Download WO KPI','Download WO KPI'], kpi_dl2:['Download Poin KPI','Download Poin KPI'], lbl_sisabar:['SISABAR','SISABAR'], lbl_masuk:['JADWAL TEKNISI','TECHNICIAN SCHEDULE'], masuk_name:['Nama Teknisi','Technician Name'], masuk_hari:['Masuk Hari Ini','Working Today'], masuk_besok:['Masuk Besok','Working Tomorrow'], masuk_org:['teknisi','technicians'], masuk_legend:['P1 = Masuk · L = Libur','P1 = Working · L = Off'], map_kec:['Kecamatan','District'], abs_reset:['Reset','Reset'], odp_red:['ODP Redaman Tinggi','High ODP Attenuation'], odp_loss:['ODP Loss','ODP Loss'], lbl_invoice:['SUBMIT INVOICE','SUBMIT INVOICE'], inv_card_sudah:['SUDAH SUBMIT INVOICE','SUBMITTED INVOICE'], inv_sub_sudah:['WO yang sudah Submit Invoice','WOs with submitted invoice'], inv_card_belum:['BELUM SUBMIT INVOICE','NOT SUBMITTED INVOICE'], inv_sub_belum:['WO kolom Submit Invoice kosong','WOs with blank invoice column'], inv_belum_txt:['Belum Submit Invoice','Not submitted yet'],
  loading:['Memuat data...','Loading data...'], nodata:['Belum ada data','No data yet'], notable:['Tidak ada data','No data'],
  updated:['Diperbarui','Updated'], autoref:['otomatis setiap 1 menit','auto-refresh every minute'],
  connfail:['Gagal terhubung ke Apps Script. Pastikan URL benar dan deploy: Execute as Me, akses Anyone.','Cannot reach Apps Script. Check the URL and deployment: Execute as Me, access Anyone.'],
@@ -934,8 +946,8 @@ function buildNav(){
  $('nav').innerHTML=`<a id="n_dashboard" style="${ncSt('dashboard')}" onclick="go('dashboard')">${T('dashboard')}</a>`
   +`<div class="grp" onclick="toggleGrp()"><span>${T('menu')}</span><span id="arr" class="arr">${S.grpOpen?'▾':'▸'}</span></div>`
   +`<div id="grp" class="sub ${S.grpOpen?'':'hide'}">${(S.menus||[]).filter(m=>m!=='slip'&&m!=='barang').map(m=>`<a id="n_${m}" style="${ncSt(m)}" onclick="go('${m}')">${T('lbl_'+m)}</a>`).join('')}`
-   +`<a id="n_sisabar" href="https://aksaraperdanamultimedia.github.io/SISABAR/" target="_blank" rel="noopener" style="${ncSt('sisabar')}">${T('lbl_sisabar')}<span class="xo-badge">&#8599;</span></a>`
-   +`<a id="n_slipgaji" href="https://aksaraperdanamultimedia.github.io/SLIPGAJI/" target="_blank" rel="noopener" style="${ncSt('slip')}">${T('lbl_slip')}<span class="xo-badge">&#8599;</span></a>`
+   +`<a id="n_sisabar" href="https://sisabar.dashapmdpk.site" target="_blank" rel="noopener" style="${ncSt('sisabar')}">${T('lbl_sisabar')}<span class="xo-badge">&#8599;</span></a>`
+   +`<a id="n_slipgaji" href="https://slipgaji.dashapmdpk.site" target="_blank" rel="noopener" style="${ncSt('slip')}">${T('lbl_slip')}<span class="xo-badge">&#8599;</span></a>`
    +`<a id="n_fieldsa" href="https://fieldsa.fiberstar.co.id/#/tasklist/dispatchingboard" target="_blank" rel="noopener" style="${ncSt('fieldsa')}">${T('lbl_fieldsa')}<span class="xo-badge">&#8599;</span></a>`;
  markNav();
 }
@@ -1221,13 +1233,16 @@ R.kpi=function(d){if(d.err){$('out').innerHTML=`<div class="err">${E(d.err)}</di
 R.masuk=function(d){
  setCtl('');
  if(d.err){$('out').innerHTML=`<div class="err">${E(d.err)}</div>`;return}
- const b=d.tomorrow?d.besok:d.hari;
- const tgl=new Date(b.date+'T00:00:00').toLocaleDateString(locale(),{weekday:'long',day:'numeric',month:'long',year:'numeric'});
- const title=d.tomorrow?T('masuk_besok'):T('masuk_hari');
- const body=b.names.length
-   ?tbl(['No',T('lbl_masuk')],b.names.map((n,i)=>[i+1,n]))
-   :`<div style="padding:24px;text-align:center;color:var(--mu)">${T('nodata')}</div>`;
- $('out').innerHTML=`<div class="panel"><div class="sec-t"><h3>${title} · ${E(tgl)}</h3><small>${b.names.length} ${T('masuk_org')} · ${T('masuk_legend')}</small></div>${body}</div>`;
+ const sec=(b,label)=>{
+   const tgl=new Date(b.date+'T00:00:00').toLocaleDateString(locale(),{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+   const body=b.names.length
+     ?tbl(['No',T('masuk_name')],b.names.map((n,i)=>[i+1,n]))
+     :`<div style="padding:16px;text-align:center;color:var(--mu)">${T('nodata')}</div>`;
+   return `<div class="mseg"><div class="mdiv"><span>${label}</span><em>${E(tgl)}</em><i>${b.names.length} ${T('masuk_org')}</i></div>${body}</div>`;
+ };
+ const first=d.tomorrow?sec(d.besok,T('masuk_besok')):sec(d.hari,T('masuk_hari'));
+ const second=d.tomorrow?sec(d.hari,T('masuk_hari')):sec(d.besok,T('masuk_besok'));
+ $('out').innerHTML=`<div class="panel"><div class="sec-t"><h3>${T('lbl_masuk')}</h3><small>${T('masuk_legend')}</small></div>${first}${second}</div>`;
 };
 
 /* ---------- SUBMIT INVOICE ---------- */
