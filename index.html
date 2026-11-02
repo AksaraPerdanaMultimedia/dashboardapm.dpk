@@ -1215,7 +1215,7 @@ async function dlXlsx(menu){
 function dlKpi(){return dlXlsx('kpixls')}
 function dlPoinKpi(){return dlXlsx('kpipoin')}
 R.kpi=function(d){if(d.err){$('out').innerHTML=`<div class="err">${E(d.err)}</div>`;return}const ks=Object.keys(d.months||{});if(!ks.length){$('out').innerHTML=empty();return}
-  if(!ks.includes(S.k))S.k=ks[ks.length-1];
+  const MNID=['JANUARI','FEBRUARI','MARET','APRIL','MEI','JUNI','JULI','AGUSTUS','SEPTEMBER','OKTOBER','NOVEMBER','DESEMBER'];const curKey=MNID[new Date().getMonth()];if(S.kpiCur!==curKey){S.kpiCur=curKey;if(ks.includes(curKey))S.k=curKey}if(!ks.includes(S.k))S.k=ks.includes(curKey)?curKey:ks[ks.length-1];
   setCtl(`<select onchange="S.k=this.value;draw()">${ks.map(k=>`<option ${k===S.k?'selected':''}>${E(k)}</option>`).join('')}</select><span class="clock">${T('year')} ${E(d.year)}</span>`);
   const m=d.months[S.k],rows=m.rows,val=r=>parseFloat(String(r[6]).replace('%','').replace(',','.'))||0;
   const v=rows.map(val),hi=Math.max(...v),lo=Math.min(...v);
