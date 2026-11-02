@@ -1223,7 +1223,8 @@ R.kpi=function(d){if(d.err){$('out').innerHTML=`<div class="err">${E(d.err)}</di
   const tgt=rows.reduce((s,r)=>s+(+r[2]||0),0),rea=rows.reduce((s,r)=>s+(+r[3]||0),0);
   const avg=m.avg?val(m.avg):0;
   const pred=p=>/KURANG/i.test(p)?'er':/BAIK|BAGUS|SANGAT/i.test(p)?'ok':'wr';
-  $('out').innerHTML=`<div class="grid kpis">
+  const note=(!ks.includes(curKey)&&d.read)?`<div class="err">Bulan ${E(curKey)} belum terbaca dari spreadsheet. Blok yang terbaca: ${E((d.read||[]).join(', ')||'-')}</div>`:'';
+  $('out').innerHTML=note+`<div class="grid kpis">
    ${card(T('kpi_max'),`<span style="font-size:17px">${E(names(hi))}</span>`,hi.toFixed(1)+'%','var(--ok)')}
    ${card(T('kpi_min'),`<span style="font-size:17px">${E(names(lo))}</span>`,lo.toFixed(1)+'%','var(--er)')}
    ${card(T('kpi_avg'),avg.toFixed(1)+'%',`${rea} ${T('kpi_of')} ${tgt}`,'var(--ac)')}
